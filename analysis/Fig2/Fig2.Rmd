@@ -1,0 +1,495 @@
+---
+title: "Fig2: selected analyses and plots"
+output: html_document
+---
+
+Selected code is included directly below. This notebook covers only the analyses listed in its sections. See the repository README for omitted material.
+
+```{r setup, include=FALSE}
+REPO <- normalizePath(file.path(dirname(knitr::current_input(dir = TRUE)), ".."), winslash = "/", mustWork = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = TRUE, error = FALSE)
+knitr::opts_knit$set(root.dir = REPO)
+dir.create(file.path(REPO, "Fig2/output"), recursive = TRUE, showWarnings = FALSE)
+```
+
+The first section includes the original permutation-based analysis and may take substantially longer than the plotting section. Each section can also be executed separately.
+
+## Taxonomic structure and rarefaction statistics
+
+```{r analyze-taxonomic-structure}
+dir.create(file.path(REPO, "Fig2/output"), recursive = TRUE, showWarnings = FALSE)
+
+
+# Portability-only adapter added during code collection (2026-09-13).
+
+
+# Result 2 statistical support: taxonomy-associated ARG carriage and composition
+# All primary analyses use the Rep99 genome set. The script writes tabular
+# evidence only; it does not add a statistics panel to Fig. 2.
+
+required_packages <- c("readr", "dplyr", "tidyr", "tibble", "broom", "emmeans", "vegan")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages) > 0) {
+  stop("Missing R packages: ", paste(missing_packages, collapse = ", "), call. = FALSE)
+}
+
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tibble)
+
+project_dir <- REPO
+data_dir <- file.path(REPO, "Fig2/output")
+s3_path <- file.path(REPO, "shared/data/ARG_annotations.tsv")
+s4_path <- file.path(REPO, "shared/data/genome_ARG_summary.tsv")
+out_dir <- file.path(REPO, "Fig2/output")
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+min_rep99_genomes <- 50L
+permutations_n <- 9999L
+rarefaction_n <- 50L
+rarefaction_iterations <- 1000L
+set.seed(20260620)
+
+s3 <- readr::read_tsv(s3_path, show_col_types = FALSE)
+s4 <- readr::read_tsv(s4_path, show_col_types = FALSE)
+
+rep99 <- s4 %>%
+  filter(genome_set == "Rep99") %>%
+  transmute(
+    genome_id,
+    genus = if_else(is.na(genus) | genus == "", "Unclassified", genus),
+    source_type = if_else(is.na(source_type) | source_type == "", "other", source_type),
+    ARG_positive = ARG_positive == "yes",
+    ARG_hit_count = as.integer(ARG_hit_count)
+  )
+
+rep99_hits <- s3 %>%
+  filter(genome_set == "Rep99" | is_rep99 == "yes") %>%
+  transmute(
+    genome_id,
+    genus = if_else(is.na(genus) | genus == "", "Unclassified", genus),
+    ARG_gene,
+    ARG_class
+  )
+
+stopifnot(nrow(rep99) == 4808L, nrow(rep99_hits) == 1424L)
+
+major_genera <- rep99 %>%
+  count(genus, name = "Rep99_genomes") %>%
+  filter(Rep99_genomes >= min_rep99_genomes) %>%
+  arrange(desc(Rep99_genomes))
+
+model_data <- rep99 %>%
+  semi_join(major_genera, by = "genus") %>%
+  mutate(
+    genus = factor(genus),
+    source_type = factor(source_type),
+    ARG_positive_numeric = as.integer(ARG_positive)
+  )
+
+# Genus effect on ARG-positive status after adjustment for source category.
+glm_full <- glm(
+  ARG_positive_numeric ~ genus + source_type,
+  data = model_data,
+  family = binomial()
+)
+glm_source_only <- update(glm_full, . ~ source_type)
+glm_genus_only <- update(glm_full, . ~ genus)
+
+genus_lrt <- anova(glm_source_only, glm_full, test = "LRT") %>%
+  broom::tidy() %>%
+  slice_tail(n = 1) %>%
+  transmute(
+    test = "Genus effect adjusted for source_type",
+    df = df,
+    deviance = deviance,
+    chi_square = deviance,
+    p_value = p.value,
+    n_genomes = nrow(model_data),
+    n_genera = nlevels(model_data$genus)
+  )
+
+source_lrt <- anova(glm_genus_only, glm_full, test = "LRT") %>%
+  broom::tidy() %>%
+  slice_tail(n = 1) %>%
+  transmute(
+    test = "Source_type effect adjusted for genus",
+    df = df,
+    deviance = deviance,
+    chi_square = deviance,
+    p_value = p.value,
+    n_genomes = nrow(model_data),
+    n_genera = nlevels(model_data$genus)
+  )
+
+glm_tests <- bind_rows(genus_lrt, source_lrt)
+
+adjusted_genus <- emmeans::emmeans(glm_full, ~ genus, type = "response") %>%
+  as.data.frame() %>%
+  as_tibble() %>%
+  rename(
+    adjusted_probability = prob,
+    asymptotic_SE = SE,
+    ci_low = asymp.LCL,
+    ci_high = asymp.UCL
+  ) %>%
+  left_join(
+    model_data %>%
+      group_by(genus) %>%
+      summarise(
+        observed_genomes = n(),
+        observed_ARG_positive = sum(ARG_positive_numeric),
+        .groups = "drop"
+      ),
+    by = "genus"
+  ) %>%
+  mutate(
+    separation_flag = observed_ARG_positive == 0 | observed_ARG_positive == observed_genomes,
+    ci_low = if_else(separation_flag, NA_real_, ci_low),
+    ci_high = if_else(separation_flag, NA_real_, ci_high),
+    note = if_else(
+      separation_flag,
+      "Complete separation: adjusted interval suppressed; use observed count and overall LRT",
+      ""
+    )
+  )
+
+genus_pairwise <- emmeans::contrast(
+  emmeans::emmeans(glm_full, ~ genus),
+  method = "pairwise",
+  adjust = "BH"
+) %>%
+  as.data.frame() %>%
+  as_tibble() %>%
+  rename(p_value_BH = p.value)
+
+# ARG gene composition among ARG-positive genomes from major genera.
+composition_meta <- model_data %>%
+  filter(ARG_positive) %>%
+  select(genome_id, genus, source_type) %>%
+  arrange(genome_id)
+
+composition_long <- rep99_hits %>%
+  semi_join(composition_meta, by = "genome_id") %>%
+  distinct(genome_id, ARG_gene) %>%
+  mutate(present = 1L)
+
+composition_matrix <- composition_long %>%
+  tidyr::pivot_wider(names_from = ARG_gene, values_from = present, values_fill = 0L) %>%
+  right_join(composition_meta %>% select(genome_id), by = "genome_id") %>%
+  arrange(match(genome_id, composition_meta$genome_id))
+
+stopifnot(identical(composition_matrix$genome_id, composition_meta$genome_id))
+composition_numeric <- composition_matrix %>%
+  select(-genome_id) %>%
+  as.data.frame()
+rownames(composition_numeric) <- composition_meta$genome_id
+
+jaccard <- vegan::vegdist(composition_numeric, method = "jaccard", binary = TRUE)
+permanova <- vegan::adonis2(
+  jaccard ~ genus + source_type,
+  data = composition_meta,
+  permutations = permutations_n,
+  by = "margin"
+) %>%
+  as.data.frame() %>%
+  rownames_to_column("term") %>%
+  as_tibble() %>%
+  rename(
+    df = Df,
+    sum_of_squares = SumOfSqs,
+    R2 = R2,
+    F_statistic = F,
+    p_value = `Pr(>F)`
+  ) %>%
+  mutate(
+    permutations = permutations_n,
+    n_ARG_positive_genomes = nrow(composition_meta)
+  )
+
+genus_dispersion <- vegan::betadisper(
+  jaccard,
+  composition_meta$genus,
+  add = "lingoes"
+)
+dispersion_test <- vegan::permutest(genus_dispersion, permutations = permutations_n)$tab %>%
+  as.data.frame() %>%
+  rownames_to_column("term") %>%
+  as_tibble() %>%
+  rename(
+    df = Df,
+    sum_of_squares = `Sum Sq`,
+    mean_square = `Mean Sq`,
+    F_statistic = F,
+    p_value = `Pr(>F)`
+  ) %>%
+  mutate(
+    grouping = "genus",
+    distance_correction = "Lingoes",
+    permutations = permutations_n,
+    n_ARG_positive_genomes = nrow(composition_meta)
+  )
+
+# Equal-depth sensitivity analysis for observed ARG gene richness.
+hits_by_genome <- split(rep99_hits$ARG_gene, rep99_hits$genome_id)
+major_genome_ids <- split(model_data$genome_id, model_data$genus)
+
+rarefaction_draws <- lapply(names(major_genome_ids), function(g) {
+  ids <- major_genome_ids[[g]]
+  if (length(ids) < rarefaction_n) return(NULL)
+  richness <- replicate(rarefaction_iterations, {
+    sampled_ids <- sample(ids, rarefaction_n, replace = FALSE)
+    length(unique(unlist(hits_by_genome[sampled_ids], use.names = FALSE)))
+  })
+  tibble(
+    genus = g,
+    draw = seq_len(rarefaction_iterations),
+    rarefied_ARG_gene_richness = richness
+  )
+}) %>% bind_rows()
+
+rarefaction_summary <- rarefaction_draws %>%
+  group_by(genus) %>%
+  summarise(
+    genomes_per_draw = rarefaction_n,
+    iterations = rarefaction_iterations,
+    median_rarefied_richness = median(rarefied_ARG_gene_richness),
+    mean_rarefied_richness = mean(rarefied_ARG_gene_richness),
+    ci_low = unname(quantile(rarefied_ARG_gene_richness, 0.025)),
+    ci_high = unname(quantile(rarefied_ARG_gene_richness, 0.975)),
+    .groups = "drop"
+  ) %>%
+  left_join(major_genera, by = "genus") %>%
+  arrange(desc(median_rarefied_richness), desc(mean_rarefied_richness))
+
+analysis_manifest <- tibble(
+  item = c(
+    "Rep99 genomes", "Rep99 ARG hits", "Major-genus threshold",
+    "Major genera", "Genomes in logistic model",
+    "ARG-positive genomes in composition model", "PERMANOVA permutations",
+    "Rarefaction genomes per draw", "Rarefaction iterations"
+  ),
+  value = as.character(c(
+    nrow(rep99), nrow(rep99_hits), min_rep99_genomes,
+    nrow(major_genera), nrow(model_data), nrow(composition_meta),
+    permutations_n, rarefaction_n, rarefaction_iterations
+  ))
+)
+
+readr::write_tsv(analysis_manifest, file.path(out_dir, "Result2_analysis_manifest.tsv"))
+readr::write_tsv(glm_tests, file.path(out_dir, "Result2_logistic_LRT.tsv"))
+readr::write_tsv(adjusted_genus, file.path(out_dir, "Result2_genus_adjusted_probabilities.tsv"))
+readr::write_tsv(genus_pairwise, file.path(out_dir, "Result2_genus_pairwise_BH.tsv"))
+readr::write_tsv(permanova, file.path(out_dir, "Result2_ARG_composition_PERMANOVA.tsv"))
+readr::write_tsv(dispersion_test, file.path(out_dir, "Result2_ARG_composition_betadisper.tsv"))
+readr::write_tsv(rarefaction_summary, file.path(out_dir, "Result2_rarefied_ARG_richness.tsv"))
+
+message("Result 2 statistics written to: ", out_dir)
+message("Major genera: ", nrow(major_genera), "; logistic n: ", nrow(model_data))
+message("Composition n: ", nrow(composition_meta), "; ARG genes: ", ncol(composition_numeric))
+```
+
+## Fig2A — ARG prevalence by genus
+
+```{r plot-Fig2A-genus-prevalence}
+dir.create(file.path(REPO, "Fig2/output"), recursive = TRUE, showWarnings = FALSE)
+
+
+# Portability-only adapter added during code collection (2026-09-13).
+
+
+# Revised Fig. 2A — forest plot of genus-level ARG-positive prevalence.
+# This alternative is written to Fig2/revised and does not overwrite the
+# original Fig. 2A files.
+
+required_packages <- c("readr", "dplyr", "forcats", "ggplot2", "svglite", "ragg", "scales")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages) > 0) {
+  stop("Missing R packages: ", paste(missing_packages, collapse = ", "), call. = FALSE)
+}
+
+library(readr)
+library(dplyr)
+library(forcats)
+library(ggplot2)
+
+project_dir <- REPO
+s4_path <- file.path(REPO, "shared/data/genome_ARG_summary.tsv")
+revised_dir <- file.path(REPO, "Fig2/output")
+source_data_dir <- file.path(REPO, "Fig2/output")
+export_dir <- file.path(REPO, "Fig2/output")
+dir.create(source_data_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(export_dir, recursive = TRUE, showWarnings = FALSE)
+
+min_rep99_genomes <- 50L
+warm <- "#B48770"
+slate <- "#3E5870"
+ci_colour <- "#93A7B9"
+grid_colour <- "#E8EDF1"
+
+s4 <- readr::read_tsv(s4_path, show_col_types = FALSE)
+rep99 <- s4 %>%
+  filter(genome_set == "Rep99") %>%
+  mutate(
+    genus = if_else(is.na(genus) | genus == "", "Unclassified", genus),
+    ARG_positive_bool = ARG_positive == "yes"
+  )
+
+if (nrow(rep99) != 4808L) {
+  stop("Rep99 genome count is ", nrow(rep99), "; expected 4808.", call. = FALSE)
+}
+
+plot_data <- rep99 %>%
+  group_by(genus) %>%
+  summarise(
+    Rep99_genomes = n(),
+    ARG_positive_genomes = sum(ARG_positive_bool),
+    ARG_positive_rate_pct = 100 * ARG_positive_genomes / Rep99_genomes,
+    .groups = "drop"
+  ) %>%
+  filter(Rep99_genomes >= min_rep99_genomes) %>%
+  rowwise() %>%
+  mutate(
+    ci_low_pct = 100 * stats::binom.test(ARG_positive_genomes, Rep99_genomes)$conf.int[1],
+    ci_high_pct = 100 * stats::binom.test(ARG_positive_genomes, Rep99_genomes)$conf.int[2]
+  ) %>%
+  ungroup() %>%
+  arrange(desc(ARG_positive_rate_pct)) %>%
+  mutate(
+    rank = row_number(),
+    highlight = if_else(rank <= 3, "Top three observed rates", "Other major genera"),
+    fraction_label = paste0(
+      scales::comma(ARG_positive_genomes, accuracy = 1), "/",
+      scales::comma(Rep99_genomes, accuracy = 1)
+    ),
+    rate_label = sprintf("%.1f%%", ARG_positive_rate_pct),
+    genus = factor(genus, levels = rev(genus))
+  )
+
+if (nrow(plot_data) != 14L) {
+  stop("Major-genus count is ", nrow(plot_data), "; expected 14.", call. = FALSE)
+}
+
+readr::write_tsv(
+  plot_data %>% mutate(genus = as.character(genus)),
+  file.path(source_data_dir, "Fig2A_forest_revised_source_data.tsv")
+)
+
+fig2a_forest <- ggplot(plot_data, aes(y = genus, x = ARG_positive_rate_pct)) +
+  geom_vline(
+    xintercept = c(10, 20, 30),
+    colour = grid_colour,
+    linewidth = 0.3
+  ) +
+  geom_errorbar(
+    aes(xmin = ci_low_pct, xmax = ci_high_pct),
+    width = 0.18,
+    linewidth = 0.55,
+    colour = ci_colour
+  ) +
+  geom_point(
+    aes(fill = highlight),
+    shape = 21,
+    size = 3.2,
+    stroke = 0.45,
+    colour = "white"
+  ) +
+  geom_text(
+    aes(label = rate_label),
+    nudge_x = 1.05,
+    hjust = 0,
+    size = 2.15,
+    family = "Arial",
+    colour = "#2E2E2E"
+  ) +
+  geom_text(
+    aes(label = fraction_label),
+    x = 35.8,
+    hjust = 1,
+    size = 2.05,
+    family = "Arial",
+    colour = "#5A5A5A"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Top three observed rates" = warm,
+      "Other major genera" = slate
+    ),
+    guide = "none"
+  ) +
+  scale_x_continuous(
+    limits = c(-0.6, 36.6),
+    breaks = c(0, 10, 20, 30),
+    labels = function(x) paste0(x, "%"),
+    expand = expansion(mult = c(0.01, 0))
+  ) +
+  labs(
+    title = "A",
+    subtitle = "ARG-positive prevalence across major genera",
+    x = "ARG-positive genomes (%)",
+    y = NULL,
+    caption = "Exact 95% binomial CI; right labels: ARG-positive/total Rep99 genomes"
+  ) +
+  theme_classic(base_size = 7, base_family = "Arial") +
+  theme(
+    plot.title = element_text(size = 10, face = "bold", hjust = 0),
+    plot.subtitle = element_text(size = 7.2, face = "bold", margin = margin(b = 5)),
+    plot.caption = element_text(size = 5.4, colour = "#5A5A5A", hjust = 0, margin = margin(t = 5)),
+    axis.text.y = element_text(size = 6.8, face = "italic", colour = "#2E2E2E"),
+    axis.text.x = element_text(size = 6.3, colour = "#404040"),
+    axis.title.x = element_text(size = 6.8),
+    axis.line = element_line(linewidth = 0.4, colour = "black"),
+    axis.ticks = element_line(linewidth = 0.35, colour = "black"),
+    plot.margin = margin(5, 8, 5, 5)
+  )
+
+save_revised_panel <- function(plot, filename, width_mm = 105, height_mm = 105, dpi = 600) {
+  width_in <- width_mm / 25.4
+  height_in <- height_mm / 25.4
+
+  svglite::svglite(paste0(filename, ".svg"), width = width_in, height = height_in)
+  print(plot)
+  dev.off()
+
+  grDevices::cairo_pdf(
+    paste0(filename, ".pdf"), width = width_in, height = height_in, family = "Arial"
+  )
+  print(plot)
+  dev.off()
+
+  ragg::agg_png(
+    paste0(filename, ".png"), width = width_in, height = height_in,
+    units = "in", res = 300, background = "white"
+  )
+  print(plot)
+  dev.off()
+
+  ragg::agg_tiff(
+    paste0(filename, ".tiff"), width = width_in, height = height_in,
+    units = "in", res = dpi, background = "white", compression = "lzw"
+  )
+  print(plot)
+  dev.off()
+}
+
+out_base <- file.path(export_dir, "Fig2A_forest_revised")
+save_revised_panel(fig2a_forest, out_base)
+
+message("Revised Fig. 2A exported without overwriting originals: ", out_base)
+message(
+  "Top rates: ",
+  paste(
+    plot_data %>%
+      slice_head(n = 5) %>%
+      transmute(label = paste0(as.character(genus), "=", rate_label, " (", fraction_label, ")")) %>%
+      pull(label),
+    collapse = "; "
+  )
+)
+```
+

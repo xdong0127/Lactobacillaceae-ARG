@@ -1,0 +1,1141 @@
+---
+title: "Fig3: selected analyses and plots"
+output: html_document
+---
+
+Selected code is included directly below. This notebook covers only the analyses listed in its sections. See the repository README for omitted material.
+
+```{r setup, include=FALSE}
+REPO <- normalizePath(file.path(dirname(knitr::current_input(dir = TRUE)), ".."), winslash = "/", mustWork = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = TRUE, error = FALSE)
+knitr::opts_knit$set(root.dir = REPO)
+dir.create(file.path(REPO, "Fig3/output"), recursive = TRUE, showWarnings = FALSE)
+Sys.setenv(FIGURE_REPO_ROOT = REPO, PYTHONUTF8 = "1", MPLBACKEND = "Agg")
+knitr::opts_chunk$set(python.reticulate = FALSE, engine.path = list(python = Sys.getenv("PYTHON", unset = Sys.which("python"))))
+```
+
+## Fig3C — prepare the ARG–MGE network tables
+
+```{r prepare-Fig3C-network}
+dir.create(file.path(REPO, "Fig3/output"), recursive = TRUE, showWarnings = FALSE)
+
+library(readr)
+library(dplyr)
+
+args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", args, value = TRUE)
+script_dir <- file.path(REPO, "Fig3/output")
+
+
+project_root <- REPO
+output_root <- file.path(REPO, "Fig3/output/network")
+main_dir <- file.path(output_root, "01_main_recommended")
+expanded_dir <- file.path(output_root, "02_expanded_ge2_optional")
+unfiltered_dir <- file.path(output_root, "03_all_pairs_unfiltered")
+audit_dir <- file.path(output_root, "04_audit_and_repro")
+audit_main_dir <- file.path(audit_dir, "01_main_mappings")
+audit_expanded_dir <- file.path(audit_dir, "02_expanded_mappings")
+audit_all_dir <- file.path(audit_dir, "03_all_pairs")
+code_dir <- file.path(output_root, "05_code_and_docs")
+
+for (path in c(
+  main_dir, expanded_dir, unfiltered_dir, audit_dir, audit_main_dir,
+  audit_expanded_dir, audit_all_dir, code_dir
+)) {
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+}
+s12_file <- file.path(REPO, "Fig3/data/ARG_MGE_annotations.tsv")
+stopifnot(file.exists(s12_file))
+
+main_arg_label <- function(x) {
+  case_when(
+    grepl("^TEM-", x) ~ "TEM-family",
+    x == "Enterococcus faecalis chloramphenicol acetyltransferase" ~
+      "CAT (E. faecalis)",
+    x == "Enterococcus faecium chloramphenicol acetyltransferase" ~
+      "CAT (E. faecium)",
+    x == "AAC(6')-Ie-APH(2'')-Ia bifunctional protein" ~
+      "AAC(6')-Ie-APH(2'')-Ia",
+    TRUE ~ x
+  )
+}
+
+unfiltered_arg_label <- function(x) {
+  case_when(
+    x == "Enterococcus faecalis chloramphenicol acetyltransferase" ~
+      "CAT (E. faecalis)",
+    x == "Enterococcus faecium chloramphenicol acetyltransferase" ~
+      "CAT (E. faecium)",
+    x == "AAC(6')-Ie-APH(2'')-Ia bifunctional protein" ~
+      "AAC(6')-Ie-APH(2'')-Ia",
+    TRUE ~ x
+  )
+}
+
+normalize_mge_class <- function(x) {
+  case_when(
+    x == "Tn916" ~ "Tn916-like",
+    x == "IS_or_transposase" ~ "IS/transposase",
+    x == "IS" ~ "insertion sequence",
+    x == "plasmid_related" ~ "plasmid-related",
+    x == "transposon" ~ "transposon",
+    x == "integron" ~ "integron",
+    x == "qac_related" ~ "qac-related",
+    x == "other_MGE" ~ "other MGE",
+    TRUE ~ x
+  )
+}
+
+arg_colour_name <- function(x) {
+  case_when(
+    x == "tetracycline" ~ "低饱和鼠尾草绿",
+    x == "MLS" ~ "低饱和棕褐色",
+    x == "aminoglycoside" ~ "柔和珊瑚红",
+    x == "phenicol" ~ "低饱和蓝灰色",
+    x == "multidrug" ~ "浅石板蓝灰色",
+    x == "beta-lactam" ~ "低饱和灰紫色",
+    x == "sulfonamide" ~ "柔和沙金色",
+    x == "trimethoprim" ~ "低饱和卡其棕",
+    x == "disinfecting agents and antiseptics" ~ "低饱和灰青色",
+    x == "fluoroquinolone" ~ "淡薰衣草紫",
+    x == "peptide" ~ "柔和杏橙色",
+    TRUE ~ "中性灰色"
+  )
+}
+
+mge_colour_name <- function(x) {
+  case_when(
+    x == "Tn916-like" ~ "砖红色",
+    x == "IS/transposase" ~ "浅天蓝色",
+    x == "insertion sequence" ~ "浅天蓝色",
+    x == "plasmid-related" ~ "暖橙色",
+    x == "qac-related" ~ "中等钢蓝色",
+    x == "transposon" ~ "砖红色",
+    x == "integron" ~ "深青蓝色",
+    TRUE ~ "中等钢蓝色"
+  )
+}
+
+make_mge_gene_label <- function(ids) {
+  x <- sub("^[0-9]+_", "", ids)
+  x <- sub("_[^_]+$", "", x)
+  x <- gsub("_+$", "", x)
+  x <- gsub("__+", "_", x)
+
+  # Remove database-specific replicon-family prefixes while retaining the
+  # biologically interpretable component or plasmid name.
+  x <- sub("^[Rr]ep[A-Za-z0-9]+_[0-9]+_", "", x)
+  x <- sub("^[Rr]epUS12_", "", x)
+
+  case_when(
+    x == "ColRNAI_1" ~ "ColRNAI-1",
+    x == "repC(Cassette)" ~ "repC (cassette)",
+    x == "rep(pUB110)" ~ "rep (pUB110)",
+    x == "repB(pUB110)" ~ "repB (pUB110)",
+    x == "rep(pKH7)" ~ "rep (pKH7)",
+    x == "repE(pTEF1)" ~ "repE (pTEF1)",
+    x == "ORF(E.faeciumContig1183)" ~ "ORF (E. faecium contig1183)",
+    x == "rep(pKH21)" ~ "rep (pKH21)",
+    x == "repC(pS0385-1)" ~ "repC (pS0385-1)",
+    x == "ORF(pNE131)" ~ "ORF (pNE131)",
+    x == "rep(pKH13)" ~ "rep (pKH13)",
+    TRUE ~ x
+  )
+}
+
+rep99_hits <- read_tsv(s12_file, show_col_types = FALSE) |>
+  filter(genome_set == "Rep99", best_hit == "yes") |>
+  mutate(
+    ARG_display = main_arg_label(ARG_gene),
+    ARG_display_unfiltered = unfiltered_arg_label(ARG_gene),
+    MGE_element_id = best_hit_MGE_id,
+    MGE_database_index = sub("_.*$", "", best_hit_MGE_id),
+    MGE_gene_label = make_mge_gene_label(best_hit_MGE_id),
+    MGE_class = normalize_mge_class(best_hit_MGE_category)
+  )
+
+stopifnot(nrow(rep99_hits) == 278L)
+stopifnot(!any(is.na(rep99_hits$MGE_element_id)))
+stopifnot(!any(rep99_hits$MGE_element_id == ""))
+
+pair_summary <- rep99_hits |>
+  group_by(
+    ARG_display,
+    ARG_class,
+    MGE_gene_label,
+    MGE_class
+  ) |>
+  summarise(
+    ARG_gene_members = paste(sort(unique(ARG_gene)), collapse = ";"),
+    MGE_element_ids = paste(sort(unique(MGE_element_id)), collapse = ";"),
+    MGE_database_entry_count = n_distinct(MGE_element_id),
+    legacy_MGE_categories = paste(
+      sort(unique(best_hit_MGE_category)),
+      collapse = ";"
+    ),
+    hit_count = n(),
+    carrier_genome_count = n_distinct(genome_id),
+    .groups = "drop"
+  ) |>
+  arrange(desc(hit_count), ARG_display, MGE_gene_label)
+
+pair_summary_unfiltered <- rep99_hits |>
+  group_by(
+    ARG_display = ARG_display_unfiltered,
+    ARG_class,
+    MGE_gene_label,
+    MGE_class
+  ) |>
+  summarise(
+    ARG_gene_members = paste(sort(unique(ARG_gene)), collapse = ";"),
+    MGE_element_ids = paste(sort(unique(MGE_element_id)), collapse = ";"),
+    MGE_database_entry_count = n_distinct(MGE_element_id),
+    legacy_MGE_categories = paste(
+      sort(unique(best_hit_MGE_category)),
+      collapse = ";"
+    ),
+    hit_count = n(),
+    carrier_genome_count = n_distinct(genome_id),
+    .groups = "drop"
+  ) |>
+  arrange(desc(hit_count), ARG_display, MGE_gene_label)
+
+write_tsv(
+  pair_summary,
+  file.path(audit_dir, "Fig4C_specific_MGE_TEM_merged_pair_source_data.tsv")
+)
+write_tsv(
+  pair_summary_unfiltered,
+  file.path(audit_dir, "Fig4C_specific_MGE_unfiltered_pair_source_data.tsv")
+)
+
+build_chiplot <- function(
+  selected_pairs,
+  dataset_name,
+  selection_rule,
+  import_dir,
+  mapping_dir
+) {
+  selected_pairs <- selected_pairs |>
+    arrange(desc(hit_count), ARG_display, MGE_gene_label)
+
+  arg_nodes <- selected_pairs |>
+    group_by(ARG_display, ARG_class) |>
+    summarise(
+      ARG_gene_members = paste(
+        sort(unique(unlist(strsplit(ARG_gene_members, ";", fixed = TRUE)))),
+        collapse = ";"
+      ),
+      total_hits = sum(hit_count),
+      degree = n(),
+      .groups = "drop"
+    ) |>
+    arrange(desc(total_hits), ARG_display) |>
+    mutate(
+      id = sprintf("ARG_%03d", row_number()),
+      label = ARG_display,
+      node_type = "ARG",
+      node_class = ARG_class,
+      color_group = paste("ARG", ARG_class, sep = " | "),
+      recommended_colour = arg_colour_name(ARG_class),
+      MGE_gene_label = NA_character_,
+      MGE_class = NA_character_,
+      MGE_element_ids = NA_character_,
+      MGE_database_entry_count = NA_integer_,
+      legacy_MGE_categories = NA_character_
+    )
+
+  mge_nodes <- selected_pairs |>
+    group_by(
+      MGE_gene_label,
+      MGE_class
+    ) |>
+    summarise(
+      MGE_element_ids = paste(
+        sort(unique(unlist(strsplit(MGE_element_ids, ";", fixed = TRUE)))),
+        collapse = ";"
+      ),
+      MGE_database_entry_count = n_distinct(
+        unlist(strsplit(MGE_element_ids, ";", fixed = TRUE))
+      ),
+      legacy_MGE_categories = paste(
+        sort(unique(unlist(strsplit(
+          legacy_MGE_categories,
+          ";",
+          fixed = TRUE
+        )))),
+        collapse = ";"
+      ),
+      total_hits = sum(hit_count),
+      degree = n(),
+      .groups = "drop"
+    ) |>
+    arrange(desc(total_hits), MGE_gene_label) |>
+    mutate(
+      id = sprintf("MGE_%03d", row_number()),
+      label = MGE_gene_label,
+      node_type = "MGE",
+      node_class = MGE_class,
+      color_group = paste("MGE", MGE_class, sep = " | "),
+      recommended_colour = mge_colour_name(MGE_class),
+      ARG_display = NA_character_,
+      ARG_class = NA_character_,
+      ARG_gene_members = NA_character_
+    )
+
+  node_mapping <- bind_rows(
+    arg_nodes |>
+      select(
+        id, label, node_type, node_class, color_group, recommended_colour,
+        ARG_display, ARG_class, ARG_gene_members,
+        MGE_gene_label, MGE_class, MGE_element_ids,
+        MGE_database_entry_count, legacy_MGE_categories,
+        total_hits, degree
+      ),
+    mge_nodes |>
+      select(
+        id, label, node_type, node_class, color_group, recommended_colour,
+        ARG_display, ARG_class, ARG_gene_members,
+        MGE_gene_label, MGE_class, MGE_element_ids,
+        MGE_database_entry_count, legacy_MGE_categories,
+        total_hits, degree
+      )
+  )
+
+  node_standard <- node_mapping |>
+    select(id, label)
+
+  node_coloring <- node_mapping |>
+    select(
+      id, label, node_type, node_class, color_group,
+      recommended_colour, total_hits, degree
+    )
+
+  arg_id <- setNames(arg_nodes$id, arg_nodes$ARG_display)
+  mge_node_key <- paste(
+    mge_nodes$MGE_gene_label,
+    mge_nodes$MGE_class,
+    sep = "||"
+  )
+  mge_id <- setNames(mge_nodes$id, mge_node_key)
+
+  edge_mapping <- selected_pairs |>
+    mutate(
+      id = sprintf("link_%03d", row_number()),
+      source = unname(arg_id[ARG_display]),
+      target = unname(mge_id[paste(MGE_gene_label, MGE_class, sep = "||")]),
+      weight = hit_count,
+      highlight_role = case_when(
+        ARG_display == "tet(M)" &
+          grepl("Tn916", MGE_gene_label, ignore.case = TRUE) ~
+          "tet(M)-Tn916 component",
+        ARG_display == "TEM-family" &
+          MGE_gene_label == "ColRNAI-1" ~
+          "TEM-family-ColRNAI-1",
+        TRUE ~ "other"
+      )
+    ) |>
+    select(
+      id, source, target, weight,
+      ARG_gene = ARG_display,
+      ARG_gene_members,
+      ARG_class,
+      MGE_gene_label,
+      MGE_class,
+      MGE_element_ids,
+      MGE_database_entry_count,
+      legacy_MGE_categories,
+      hit_count,
+      carrier_genome_count,
+      highlight_role
+    )
+
+  edge_unweighted <- edge_mapping |>
+    select(id, source, target)
+
+  edge_weighted <- edge_mapping |>
+    select(id, source, target, weight)
+
+  stopifnot(!anyDuplicated(node_standard$id))
+  stopifnot(!anyDuplicated(edge_unweighted$id))
+  stopifnot(all(edge_unweighted$source %in% node_standard$id))
+  stopifnot(all(edge_unweighted$target %in% node_standard$id))
+  stopifnot(sum(edge_mapping$weight) == sum(selected_pairs$hit_count))
+
+  write_tsv(
+    node_standard,
+    file.path(import_dir, "Fig4C_node.tsv")
+  )
+  write_tsv(
+    node_coloring,
+    file.path(import_dir, "Fig4C_node_coloring.tsv")
+  )
+  write_tsv(
+    edge_unweighted,
+    file.path(mapping_dir, "Fig4C_edge_unweighted.tsv")
+  )
+  write_tsv(
+    edge_weighted,
+    file.path(import_dir, "Fig4C_edge_weighted.tsv")
+  )
+  write_tsv(
+    node_mapping,
+    file.path(mapping_dir, "Fig4C_node_mapping.tsv")
+  )
+  write_tsv(
+    edge_mapping,
+    file.path(mapping_dir, "Fig4C_edge_mapping.tsv")
+  )
+
+  tibble(
+    dataset = dataset_name,
+    selection_rule = selection_rule,
+    ARG_nodes = nrow(arg_nodes),
+    MGE_gene_or_component_nodes = nrow(mge_nodes),
+    total_nodes = nrow(node_standard),
+    edges = nrow(edge_mapping),
+    represented_hits = sum(edge_mapping$weight),
+    total_Rep99_MGE_associated_hits = nrow(rep99_hits),
+    represented_fraction = sum(edge_mapping$weight) / nrow(rep99_hits)
+  )
+}
+
+main_pairs <- pair_summary |>
+  filter(hit_count >= 3)
+
+expanded_pairs <- pair_summary |>
+  filter(hit_count >= 2)
+
+summary_tables <- bind_rows(
+  build_chiplot(
+    main_pairs,
+    "main_recommended_ge3",
+    "ARG-MGE gene/component pairs with hit_count >= 3; TEM alleles merged as TEM-family",
+    main_dir,
+    audit_main_dir
+  ),
+  build_chiplot(
+    expanded_pairs,
+    "expanded_optional_ge2",
+    "ARG-MGE gene/component pairs with hit_count >= 2; TEM alleles merged as TEM-family",
+    expanded_dir,
+    audit_expanded_dir
+  ),
+  build_chiplot(
+    pair_summary_unfiltered,
+    "all_pairs_unfiltered",
+    "All Rep99 ARG-MGE gene/component pairs; no frequency filter and no TEM-family merging",
+    unfiltered_dir,
+    audit_all_dir
+  )
+)
+
+write_tsv(
+  summary_tables,
+  file.path(audit_dir, "Fig4C_specific_MGE_ChiPlot_dataset_summary.tsv")
+)
+
+main_edge_mapping <- read_tsv(
+  file.path(audit_main_dir, "Fig4C_edge_mapping.tsv"),
+  show_col_types = FALSE
+)
+
+readme <- c(
+  "# Fig. 4C ChiPlot inputs at the MGE gene/component level",
+  "",
+  "## What changed",
+  "",
+  "MGE nodes represent the annotated MGE gene or component rather than individual database entries. Database indices and sequence accessions are removed from the displayed labels. For example, multiple accession-specific `tnpA` entries are combined into one `tnpA` node, whereas distinct Tn916 components remain separate nodes.",
+  "",
+  "Exact `best_hit_MGE_id` values remain in the audit mapping tables as `MGE_element_ids`. This preserves traceability after label simplification and aggregation.",
+  "",
+  "Each node is classified for colouring. ARG nodes use `ARG_class`; MGE nodes use the normalized `MGE_class`. The `recommended_colour` column gives the manuscript-consistent colour name, and `color_group` provides the corresponding grouping key in `Fig4C_node_coloring.tsv`.",
+  "",
+  "## Recommended main-figure files",
+  "",
+  "- `01_main_recommended/Fig4C_node.tsv`",
+  "- `01_main_recommended/Fig4C_edge_weighted.tsv`",
+  "- `01_main_recommended/Fig4C_node_coloring.tsv`",
+  "- Use the weighted edge file when ChiPlot accepts a weight column; otherwise use the unweighted file.",
+  "",
+  "The recommended network retains recurrent ARG-MGE gene/component pairs with at least three Rep99 hits. TEM-1, TEM-116, TEM-171 and TEM-181 are combined as `TEM-family`, and the associated plasmid-related component is displayed as `ColRNAI-1`.",
+  "",
+  "## Alternative files",
+  "",
+  "- `02_expanded_ge2_optional`: pairs supported by at least two Rep99 hits.",
+  "- `03_all_pairs_unfiltered`: every Rep99 ARG-specific MGE best-hit pair, without a frequency threshold or TEM-family merging.",
+  "- `04_audit_and_repro`: mapping tables and source-data audit.",
+  "",
+  "## Data scope",
+  "",
+  "- Dataset: 4,808 Rep99 representative genomes.",
+  "- Rep99 ARG hits: 1,424.",
+  "- MGE-associated Rep99 ARG hits with a specific best hit: 278.",
+  "- Each edge weight is the number of Rep99 ARG hits assigned to the corresponding ARG-MGE gene/component pair.",
+  "",
+  "## Important interpretation boundary",
+  "",
+  "The simplified MGE label is parsed from a best-hit database annotation and should not automatically be described as a complete mobile genetic element. The network represents recurrent ARG-MGE gene/component co-annotations within the defined ARG flanking window and does not prove horizontal transfer.",
+  "",
+  "## Suggested ChiPlot styling",
+  "",
+  "- ARG nodes: left side; colour by ARG class.",
+  "- MGE nodes: right side; colour by MGE class.",
+  "- Edge width: `weight`.",
+  "- Highlight tet(M)-Tn916 component edges as the dominant signal.",
+  "- Highlight the TEM-family-ColRNAI-1 edge as the secondary plasmid-related signal.",
+  "- Use `Fig4C_node_coloring.tsv` to assign colours and retain exact IDs only in source-data and mapping tables.",
+  "",
+  "## Main-network audit",
+  "",
+  paste0("- Nodes: ", summary_tables$total_nodes[1], "."),
+  paste0("- Edges: ", summary_tables$edges[1], "."),
+  paste0(
+    "- Represented hits: ", summary_tables$represented_hits[1], "/",
+    summary_tables$total_Rep99_MGE_associated_hits[1], " (",
+    round(100 * summary_tables$represented_fraction[1], 1), "%)."
+  ),
+  paste0(
+    "- tet(M)-Tn916 component edges in the retained network: ",
+    sum(main_edge_mapping$highlight_role == "tet(M)-Tn916 component"), "."
+  ),
+  paste0(
+    "- TEM-family-ColRNAI-1 edge weight: ",
+    main_edge_mapping |>
+      filter(highlight_role == "TEM-family-ColRNAI-1") |>
+      pull(weight), "."
+  )
+)
+writeLines(
+  readme,
+  file.path(code_dir, "README_Fig4C_specific_MGE_ChiPlot.md"),
+  useBytes = FALSE
+)
+
+cat("Specific-MGE ChiPlot files exported to: ", normalizePath(output_root), "\n", sep = "")
+print(summary_tables)
+```
+
+## Fig3E — MGE evidence in single/multi-species clusters
+
+```{r plot-Fig3E-cluster-MGE}
+dir.create(file.path(REPO, "Fig3/output"), recursive = TRUE, showWarnings = FALSE)
+
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(scales)
+
+args <- commandArgs(trailingOnly = FALSE)
+file_arg <- grep("^--file=", args, value = TRUE)
+script_dir <- file.path(REPO, "Fig3/output")
+
+project_root <- REPO
+cluster_file <- file.path(REPO, "Fig3/data/ARG99_cluster_spread_MGE_analysis_input.tsv")
+stopifnot(file.exists(cluster_file))
+
+clusters <- read_tsv(cluster_file, show_col_types = FALSE) |>
+  mutate(
+    species_group = if_else(
+      species_count >= 2,
+      "Multi-species\n(\u22652 species)",
+      "Single-species\n(1 species)"
+    ),
+    species_group = factor(
+      species_group,
+      levels = c(
+        "Single-species\n(1 species)",
+        "Multi-species\n(\u22652 species)"
+      )
+    ),
+    potentially_mobile = species_count >= 2
+  )
+
+summary_data <- clusters |>
+  group_by(species_group) |>
+  summarise(
+    total_clusters = n(),
+    MGE_positive = sum(has_MGE_evidence),
+    MGE_negative = total_clusters - MGE_positive,
+    MGE_positive_fraction = MGE_positive / total_clusters,
+    .groups = "drop"
+  ) |>
+  rowwise() |>
+  mutate(
+    ci = list(binom.test(MGE_positive, total_clusters)$conf.int),
+    ci_low = ci[[1]],
+    ci_high = ci[[2]]
+  ) |>
+  ungroup() |>
+  select(-ci)
+
+single <- summary_data |> filter(grepl("^Single", as.character(species_group)))
+multi <- summary_data |> filter(grepl("^Multi", as.character(species_group)))
+
+fisher_table <- matrix(
+  c(
+    multi$MGE_positive, multi$MGE_negative,
+    single$MGE_positive, single$MGE_negative
+  ),
+  nrow = 2,
+  byrow = TRUE,
+  dimnames = list(
+    species_group = c("Multi-species", "Single-species"),
+    MGE_status = c("MGE-positive", "No detected MGE")
+  )
+)
+fisher_result <- fisher.test(fisher_table)
+
+format_p <- function(x) {
+  if (x < 0.001) {
+    "<0.001"
+  } else {
+    formatC(x, format = "f", digits = 4)
+  }
+}
+
+summary_data <- summary_data |>
+  mutate(
+    group_definition = if_else(
+      grepl("^Multi", as.character(species_group)),
+      "\u22652 carrier species; operationally classified as potentially mobile",
+      "1 carrier species"
+    ),
+    MGE_positive_percent = 100 * MGE_positive_fraction,
+    ci_low_percent = 100 * ci_low,
+    ci_high_percent = 100 * ci_high,
+    direct_label = paste0(
+      MGE_positive, "/", total_clusters,
+      "\n(", percent(MGE_positive_fraction, accuracy = 0.1), ")"
+    ),
+    fisher_odds_ratio_multi_vs_single = if_else(
+      grepl("^Multi", as.character(species_group)),
+      unname(fisher_result$estimate),
+      NA_real_
+    ),
+    fisher_ci_low = if_else(
+      grepl("^Multi", as.character(species_group)),
+      fisher_result$conf.int[1],
+      NA_real_
+    ),
+    fisher_ci_high = if_else(
+      grepl("^Multi", as.character(species_group)),
+      fisher_result$conf.int[2],
+      NA_real_
+    ),
+    fisher_p_value = if_else(
+      grepl("^Multi", as.character(species_group)),
+      fisher_result$p.value,
+      NA_real_
+    )
+  )
+
+cluster_assignments <- clusters |>
+  transmute(
+    ARG99_cluster_id,
+    representative_ARG_gene,
+    species_count,
+    species_group = gsub("\n", " ", as.character(species_group)),
+    potentially_mobile,
+    has_MGE_evidence,
+    MGE_associated_hit_count,
+    MGE_associated_rate,
+    is_tetM
+  )
+
+write_tsv(
+  summary_data |>
+    mutate(
+      species_group = gsub("\n", " ", as.character(species_group)),
+      direct_label = gsub("\n", " ", direct_label)
+    ),
+  file.path(script_dir, "Fig4e_ARG99_MGE_by_species_group_source_data.tsv")
+)
+write_tsv(
+  cluster_assignments,
+  file.path(script_dir, "Fig4e_ARG99_species_group_cluster_assignments.tsv")
+)
+
+or_label <- paste0(
+  "Fisher's exact test: OR = ",
+  formatC(unname(fisher_result$estimate), format = "f", digits = 2),
+  ", P = ", format_p(fisher_result$p.value)
+)
+
+p <- ggplot(summary_data, aes(x = species_group)) +
+  geom_col(
+    aes(y = 1),
+    width = 0.58,
+    fill = "#E6E6E4",
+    colour = "#B7B7B4",
+    linewidth = 0.32
+  ) +
+  geom_col(
+    aes(y = MGE_positive_fraction),
+    width = 0.58,
+    fill = "#B94A3A",
+    colour = "#B94A3A",
+    linewidth = 0.32
+  ) +
+  geom_text(
+    aes(
+      y = MGE_positive_fraction / 2,
+      label = direct_label
+    ),
+    family = "Arial",
+    size = 2.35,
+    lineheight = 0.92,
+    colour = "white"
+  ) +
+  annotate(
+    "segment",
+    x = 1, xend = 2,
+    y = 1.075, yend = 1.075,
+    linewidth = 0.35,
+    colour = "#30302E"
+  ) +
+  annotate(
+    "segment",
+    x = c(1, 2), xend = c(1, 2),
+    y = 1.075, yend = 1.045,
+    linewidth = 0.35,
+    colour = "#30302E"
+  ) +
+  annotate(
+    "text",
+    x = 1.5,
+    y = 1.115,
+    label = or_label,
+    family = "Arial",
+    size = 2.15,
+    colour = "#30302E"
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1.17),
+    breaks = seq(0, 1, 0.25),
+    labels = label_percent(accuracy = 1),
+    expand = expansion(mult = c(0, 0))
+  ) +
+  labs(
+    tag = "e",
+    x = NULL,
+    y = "ARG99 clusters with MGE evidence (%)"
+  ) +
+  theme_classic(base_family = "Arial", base_size = 7) +
+  theme(
+    axis.line = element_line(linewidth = 0.38, colour = "black"),
+    axis.ticks = element_line(linewidth = 0.35, colour = "black"),
+    axis.ticks.length = grid::unit(1.3, "mm"),
+    axis.text.x = element_text(
+      size = 6.3,
+      colour = "#222222",
+      lineheight = 0.92,
+      margin = margin(t = 2.2, unit = "mm")
+    ),
+    axis.text.y = element_text(size = 6.1, colour = "#222222"),
+    axis.title.y = element_text(
+      size = 6.7,
+      margin = margin(r = 2.0, unit = "mm")
+    ),
+    plot.tag = element_text(size = 8, face = "bold"),
+    plot.tag.position = c(0.004, 0.995),
+    plot.margin = margin(4.5, 4.5, 4.5, 5.5, unit = "mm")
+  )
+
+width_mm <- 89
+height_mm <- 72
+width_in <- width_mm / 25.4
+height_in <- height_mm / 25.4
+base_file <- file.path(script_dir, "Fig4e_ARG99_MGE_by_species_group")
+
+svglite::svglite(
+  paste0(base_file, ".svg"),
+  width = width_in,
+  height = height_in
+)
+print(p)
+dev.off()
+
+grDevices::cairo_pdf(
+  paste0(base_file, ".pdf"),
+  width = width_in,
+  height = height_in,
+  family = "Arial"
+)
+print(p)
+dev.off()
+
+ragg::agg_png(
+  paste0(base_file, ".png"),
+  width = width_mm,
+  height = height_mm,
+  units = "mm",
+  res = 600,
+  background = "white"
+)
+print(p)
+dev.off()
+
+ragg::agg_tiff(
+  paste0(base_file, ".tiff"),
+  width = width_mm,
+  height = height_mm,
+  units = "mm",
+  res = 600,
+  compression = "lzw",
+  background = "white"
+)
+print(p)
+dev.off()
+
+readme <- c(
+  "# Fig. 4E | MGE evidence in single- and multi-species ARG99 clusters",
+  "",
+  "## Core conclusion",
+  "",
+  "Local MGE evidence is more frequent among ARG99 clusters detected in at least two species than among clusters restricted to one species.",
+  "",
+  "## Definitions",
+  "",
+  "- Single-species: detected in one carrier species.",
+  "- Multi-species: detected in at least two carrier species; operationally classified as potentially mobile.",
+  "- MGE-positive cluster: at least one cluster member has local MGE evidence in the defined ARG-flanking window.",
+  "",
+  "## Statistics",
+  "",
+  paste0(
+    "- Single-species: ", single$MGE_positive, "/", single$total_clusters,
+    " MGE-positive (",
+    percent(single$MGE_positive_fraction, accuracy = 0.1), ")."
+  ),
+  paste0(
+    "- Multi-species: ", multi$MGE_positive, "/", multi$total_clusters,
+    " MGE-positive (",
+    percent(multi$MGE_positive_fraction, accuracy = 0.1), ")."
+  ),
+  paste0(
+    "- Fisher's exact test: OR = ",
+    formatC(unname(fisher_result$estimate), format = "f", digits = 2),
+    ", 95% CI ",
+    formatC(fisher_result$conf.int[1], format = "f", digits = 2),
+    "-",
+    formatC(fisher_result$conf.int[2], format = "f", digits = 2),
+    ", P = ", format_p(fisher_result$p.value), "."
+  ),
+  "",
+  "## Interpretation boundary",
+  "",
+  "Multi-species occurrence and local MGE evidence nominate potentially mobile ARG candidates, but do not establish confirmed horizontal transfer, transfer direction or experimental transferability.",
+  "",
+  "## Export bundle",
+  "",
+  "- SVG and PDF: editable vector outputs.",
+  "- PNG and TIFF: 600 dpi raster outputs.",
+  "- Source-data TSV: group summary and exact test output.",
+  "- Cluster-assignment TSV: all 161 ARG99 clusters with group and MGE status.",
+  "- R script: complete reproducible workflow."
+)
+writeLines(
+  readme,
+  file.path(script_dir, "README_Fig4e_ARG99_MGE_by_species_group.md"),
+  useBytes = FALSE
+)
+
+cat("Fig. 4E exported to: ", normalizePath(script_dir), "\n", sep = "")
+print(summary_data)
+cat(or_label, "\n")
+```
+
+## Fig3F — species-level carrier prevalence
+
+```{python analyze-Fig3F-species-prevalence}
+
+from pathlib import Path
+import os
+REPO = Path(os.environ["FIGURE_REPO_ROOT"])
+(REPO / "Fig3/output").mkdir(parents=True, exist_ok=True)
+
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.stats import fisher_exact
+from statsmodels.stats.proportion import proportion_confint
+
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Arial", "DejaVu Sans", "Liberation Sans"]
+plt.rcParams["svg.fonttype"] = "none"
+plt.rcParams["pdf.fonttype"] = 42
+plt.rcParams["font.size"] = 7
+plt.rcParams["axes.linewidth"] = 0.8
+plt.rcParams["axes.spines.top"] = False
+plt.rcParams["axes.spines.right"] = False
+plt.rcParams["legend.frameon"] = False
+
+
+MIN_REP99_GENOMES = 50
+OUT_DIR = (REPO / 'Fig3/output')
+PROJECT_DIR = REPO
+REP99_FILE = (
+    (REPO / 'Fig3/data/Rep99_genomes.tsv')
+)
+CLUSTER_DIR = (
+    (REPO / 'Fig3/output')
+)
+
+
+def bh_adjust(p_values: np.ndarray) -> np.ndarray:
+    order = np.argsort(p_values)
+    ranked = p_values[order] * len(p_values) / (
+        np.arange(len(p_values)) + 1
+    )
+    adjusted_ranked = np.minimum.accumulate(ranked[::-1])[::-1]
+    adjusted = np.empty(len(p_values))
+    adjusted[order] = np.minimum(adjusted_ranked, 1.0)
+    return adjusted
+
+
+def build_source_data() -> tuple[pd.DataFrame, float]:
+    rep99 = pd.read_csv(REP99_FILE, sep="\t", dtype=str)
+    members = pd.read_csv(
+        (REPO / 'Fig3/data/ARG99_sequence_cluster_members.tsv'),
+        sep="\t",
+        dtype=str,
+    )
+    clusters = pd.read_csv(
+        (REPO / 'Fig3/data/ARG99_sequence_cluster_summary.tsv'),
+        sep="\t",
+        dtype=str,
+    )
+
+    multi_species_clusters = set(
+        clusters.loc[
+            clusters["multi_species"].str.lower().eq("true"),
+            "ARG99_cluster_id",
+        ]
+    )
+    mobile_genomes = set(
+        members.loc[
+            members["ARG99_cluster_id"].isin(multi_species_clusters),
+            "genome_id",
+        ]
+    )
+    rep99["mobile_ARG_carrier"] = rep99["genome_id"].isin(mobile_genomes)
+
+    total_mobile = int(rep99["mobile_ARG_carrier"].sum())
+    total_genomes = len(rep99)
+    overall_rate = total_mobile / total_genomes
+
+    rows = []
+    for species, group in rep99.groupby("species"):
+        species_mask = rep99["species"].eq(species)
+        carriers = int(group["mobile_ARG_carrier"].sum())
+        total = len(group)
+        noncarriers = total - carriers
+        other_carriers = total_mobile - carriers
+        other_noncarriers = (
+            total_genomes - total_mobile - noncarriers
+        )
+        odds_ratio, p_value = fisher_exact(
+            [
+                [carriers, noncarriers],
+                [other_carriers, other_noncarriers],
+            ]
+        )
+        ci_low, ci_high = proportion_confint(
+            carriers,
+            total,
+            method="beta",
+        )
+        rows.append(
+            {
+                "species": species,
+                "total_Rep99_genomes": total,
+                "mobile_ARG_carrier_genomes": carriers,
+                "mobile_ARG_carrier_rate": carriers / total,
+                "mobile_ARG_carrier_percent": 100 * carriers / total,
+                "exact_95CI_low_percent": 100 * ci_low,
+                "exact_95CI_high_percent": 100 * ci_high,
+                "odds_ratio_vs_other_species": odds_ratio,
+                "fisher_exact_p": p_value,
+            }
+        )
+
+    results = pd.DataFrame(rows)
+    results["BH_adjusted_p_all_species"] = bh_adjust(
+        results["fisher_exact_p"].to_numpy()
+    )
+    results["significance_group"] = "Not significant"
+    results.loc[
+        (results["BH_adjusted_p_all_species"] < 0.05)
+        & (results["odds_ratio_vs_other_species"] > 1),
+        "significance_group",
+    ] = "Enriched"
+    results.loc[
+        (results["BH_adjusted_p_all_species"] < 0.05)
+        & (results["odds_ratio_vs_other_species"] < 1),
+        "significance_group",
+    ] = "Depleted"
+
+    results["displayed"] = (
+        results["total_Rep99_genomes"] >= MIN_REP99_GENOMES
+    )
+    return results, overall_rate
+
+
+def abbreviate_species(species: str) -> str:
+    return species
+
+
+def plot(results: pd.DataFrame, overall_rate: float) -> None:
+    data = results.loc[results["displayed"]].copy()
+    data = data.sort_values(
+        ["mobile_ARG_carrier_rate", "total_Rep99_genomes"],
+        ascending=[True, True],
+    ).reset_index(drop=True)
+
+    colors = {
+        "Enriched": "#B45F49",
+        "Depleted": "#52748C",
+        "Not significant": "#AEB3B6",
+    }
+
+    fig, ax = plt.subplots(figsize=(6.35, 5.55))
+    y = np.arange(len(data))
+    rates = data["mobile_ARG_carrier_percent"].to_numpy()
+    low = data["exact_95CI_low_percent"].to_numpy()
+    high = data["exact_95CI_high_percent"].to_numpy()
+
+    for i, row in data.iterrows():
+        color = colors[row["significance_group"]]
+        ax.plot(
+            [low[i], high[i]],
+            [y[i], y[i]],
+            color=color,
+            linewidth=1.05,
+            solid_capstyle="round",
+            zorder=2,
+        )
+        ax.plot(
+            rates[i],
+            y[i],
+            marker="o",
+            markersize=4.6,
+            markerfacecolor=color,
+            markeredgecolor="white",
+            markeredgewidth=0.45,
+            linestyle="none",
+            zorder=3,
+        )
+
+    ax.axvline(
+        100 * overall_rate,
+        color="#555555",
+        linestyle=(0, (2.5, 2.5)),
+        linewidth=0.8,
+        zorder=1,
+    )
+    ax.text(
+        100 * overall_rate + 0.6,
+        len(data) - 0.45,
+        f"Overall {100 * overall_rate:.1f}%",
+        fontsize=6.1,
+        color="#555555",
+        va="top",
+        ha="left",
+    )
+
+    labels = [abbreviate_species(x) for x in data["species"]]
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=6.2, fontstyle="italic")
+
+    ax.set_xlim(0, 82)
+    ax.set_ylim(-0.65, len(data) - 0.2)
+    ax.set_xticks(np.arange(0, 81, 10))
+    ax.set_xlabel("Genomes carrying multi-species ARGs (%)")
+    ax.grid(
+        axis="x",
+        color="#E5E5E5",
+        linewidth=0.5,
+        alpha=0.8,
+        zorder=0,
+    )
+    ax.tick_params(axis="x", length=3, width=0.7, color="#555555")
+    ax.tick_params(axis="y", length=0, pad=5)
+
+    legend_handles = [
+        plt.Line2D(
+            [],
+            [],
+            marker="o",
+            linestyle="none",
+            markerfacecolor=colors[group],
+            markeredgecolor="white",
+            markeredgewidth=0.45,
+            markersize=4.6,
+            label=label,
+        )
+        for group, label in [
+            ("Enriched", "Enriched"),
+            ("Depleted", "Depleted"),
+            ("Not significant", "Not significant"),
+        ]
+    ]
+    ax.legend(
+        handles=legend_handles,
+        title="Fisher’s exact test\nBH-adjusted P < 0.05",
+        loc="lower right",
+        fontsize=6.0,
+        title_fontsize=6.0,
+        borderaxespad=0.35,
+        handletextpad=0.4,
+        labelspacing=0.35,
+    )
+
+    ax.text(
+        0,
+        -0.105,
+        (
+            f"Species represented by ≥{MIN_REP99_GENOMES} genomes are shown. "
+            "Bars indicate exact binomial 95% confidence intervals; each species "
+            "was compared with all other species."
+        ),
+        transform=ax.transAxes,
+        fontsize=5.9,
+        color="#666666",
+        ha="left",
+        va="top",
+    )
+
+    fig.subplots_adjust(left=0.43, right=0.98, bottom=0.16, top=0.98)
+    base = (REPO / 'Fig3/output/species_mobile_ARG_carrier_prevalence')
+    fig.savefig(base.with_suffix(".svg"), bbox_inches="tight")
+    fig.savefig(base.with_suffix(".pdf"), bbox_inches="tight")
+    fig.savefig(base.with_suffix(".png"), dpi=300, bbox_inches="tight")
+    fig.savefig(base.with_suffix(".tiff"), dpi=600, bbox_inches="tight")
+    plt.close(fig)
+
+
+def main() -> None:
+    results, overall_rate = build_source_data()
+    results.to_csv(
+        (REPO / 'Fig3/output/species_mobile_ARG_carrier_prevalence_source_data.tsv'),
+        sep="\t",
+        index=False,
+    )
+    plot(results, overall_rate)
+    print(
+        f"Displayed {(results['displayed']).sum()} species; "
+        f"overall carrier rate={100 * overall_rate:.1f}%"
+    )
+
+
+main()
+```
+

@@ -1,0 +1,162 @@
+ARG99_cluster_id	representative_ARG_gene	ARG_gene_list	ARG_class	hit_count	carrier_genome_count	summary_genome_count	genus_count	species_count	source_type_count	MGE_associated_hit_count	MGE_associated_rate	dominant_MGE_display_category	total_genome_pair_count	between_genus_pair_count	between_genus_pair_fraction	between_species_pair_count	between_species_pair_fraction	between_source_pair_count	between_source_pair_fraction	between_genus_and_source_pair_count	between_genus_and_source_pair_fraction	same_genus_between_source_pair_count	between_genus_same_source_pair_count	any_MGE_associated_pair_count	any_MGE_associated_pair_fraction	both_MGE_associated_pair_count	both_MGE_associated_pair_fraction	multi_genome	multi_species	multi_genus	multi_source	multi_genus_and_source	above_background_MGE_rate_19_5pct	putative_cross_genus_sharing_candidate	has_MGE_evidence	above_background_MGE_rate	is_tetM	is_tetM_Tn916_like
+repARGgff0001174	tet(W)	tet(W)	tetracycline	160	157	157	3	32	4	0	0.0	No detected MGE evidence	12246	6810	0.55609995	11257	0.91923894	6668	0.54450433	3590	0.29315695	3078	3220	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000002	ErmA	ErmA	MLS	15	15	15	3	4	3	2	0.1333333333333333	IS/transposase	105	47	0.44761905	71	0.67619048	59	0.56190476	29	0.27619048	30	18	27	0.25714286	1	0.00952381	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0000003	CfxA2	CfxA2	beta-lactam	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001346	ErmG	ErmG	MLS	10	10	10	2	6	2	0	0.0	No detected MGE evidence	45	16	0.35555556	40	0.88888889	16	0.35555556	4	0.08888889	12	12	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001217	vatE	vatE	MLS	47	46	46	5	17	4	3	0.0638297872340425	IS/transposase	1035	712	0.68792271	927	0.89565217	357	0.34492754	245	0.23671498	112	467	132	0.12753623	3	0.00289855	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0000481	fexB	fexB	phenicol	46	45	45	6	15	4	15	0.3260869565217391	IS/transposase	990	658	0.66464646	869	0.87777778	243	0.24545455	169	0.17070707	74	489	525	0.53030303	91	0.09191919	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0000418	fexA	fexA	phenicol	22	22	22	4	11	2	2	0.0909090909090909	IS/transposase	231	143	0.61904762	215	0.93073593	21	0.09090909	9	0.03896104	12	134	41	0.17748918	1	0.004329	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0000116	lnuA	lnuA	MLS	84	81	81	7	20	4	0	0.0	No detected MGE evidence	3240	2270	0.70061728	2886	0.89074074	1168	0.36049383	854	0.26358025	314	1416	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001345	dfrG	dfrG	trimethoprim	18	18	18	4	13	3	0	0.0	No detected MGE evidence	153	109	0.7124183	147	0.96078431	71	0.46405229	48	0.31372549	23	61	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000489	mef(F)	mef(F)	MLS	3	3	3	3	3	1	1	0.3333333333333333	IS/transposase	3	3	1.0	3	1.0	0	0.0	0	0.0	0	3	2	0.66666667	0	0.0	yes	yes	yes	no	no	yes	yes	True	True	False	False
+repARGgff0000490	msr(G)	msr(G)	MLS	3	3	3	3	3	1	1	0.3333333333333333	IS/transposase	3	3	1.0	3	1.0	0	0.0	0	0.0	0	3	2	0.66666667	0	0.0	yes	yes	yes	no	no	yes	yes	True	True	False	False
+repARGgff0001089	tet(B)	tet(B)	tetracycline	8	8	8	3	4	2	0	0.0	No detected MGE evidence	28	13	0.46428571	21	0.75	7	0.25	2	0.07142857	5	11	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001090	tetR	tetR	tetracycline	9	9	9	4	5	2	0	0.0	No detected MGE evidence	36	21	0.58333333	29	0.80555556	14	0.38888889	9	0.25	5	12	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001393	ErmT	ErmT	MLS	41	41	41	3	9	4	2	0.048780487804878	IS/transposase	820	431	0.52560976	689	0.8402439	254	0.3097561	128	0.15609756	126	303	79	0.09634146	1	0.00121951	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0001321	ErmB	ErmB	MLS	121	117	117	9	30	4	26	0.2148760330578512	IS/transposase	6786	4285	0.6314471	6313	0.93029767	3933	0.5795756	2436	0.35897436	1497	1849	2691	0.39655172	325	0.04789272	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0000290	tet(L)	tet(L)	tetracycline	76	73	73	3	16	4	11	0.1447368421052631	Tn916-like	2628	1135	0.43188737	1477	0.56202435	885	0.33675799	350	0.13318113	535	785	675	0.25684932	45	0.01712329	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0000045	dfrK	dfrK	trimethoprim	2	2	2	2	1	1	1	0.5	Plasmid-related marker	1	1	1.0	1	1.0	0	0.0	0	0.0	0	1	1	1.0	0	0.0	yes	no	yes	no	no	yes	yes	True	True	False	False
+repARGgff0000035	ErmF	ErmF	MLS	5	5	5	2	4	2	0	0.0	No detected MGE evidence	10	6	0.6	9	0.9	4	0.4	2	0.2	2	4	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001380	Mef(En2)	Mef(En2)	MLS	4	4	4	2	4	1	0	0.0	No detected MGE evidence	6	4	0.66666667	6	1.0	0	0.0	0	0.0	0	4	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0000038	tet(44)	tet(44)	tetracycline	8	8	8	2	2	1	0	0.0	No detected MGE evidence	28	12	0.42857143	12	0.42857143	0	0.0	0	0.0	0	12	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0000597	lnuC	lnuC	MLS	81	71	71	3	18	4	0	0.0	No detected MGE evidence	2485	1546	0.6221328	2020	0.81287726	581	0.23380282	376	0.15130785	205	1170	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000641	ANT(9)-Ia	ANT(9)-Ia	aminoglycoside	23	23	23	4	5	2	8	0.3478260869565217	IS/transposase	253	123	0.48616601	127	0.50197628	22	0.08695652	7	0.02766798	15	116	148	0.58498024	28	0.11067194	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0001160	ANT(4')-Ia	ANT(4')-Ia	aminoglycoside	11	11	11	2	2	1	1	0.0909090909090909	Plasmid-related marker	55	10	0.18181818	10	0.18181818	0	0.0	0	0.0	0	10	10	0.18181818	0	0.0	yes	yes	yes	no	no	no	yes	True	False	False	False
+repARGgff0001315	Erm(52)	Erm(52)	MLS	5	5	5	2	3	1	0	0.0	No detected MGE evidence	10	6	0.6	8	0.8	0	0.0	0	0.0	0	6	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0001299	tet(O)	tet(O)	tetracycline	6	6	6	4	6	2	0	0.0	No detected MGE evidence	15	13	0.86666667	15	1.0	5	0.33333333	5	0.33333333	0	8	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001207	ugd	ugd	peptide	2	2	2	1	2	1	0	0.0	No detected MGE evidence	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0000058	ErmX	ErmX	MLS	2	2	2	2	2	1	0	0.0	No detected MGE evidence	1	1	1.0	1	1.0	0	0.0	0	0.0	0	1	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0000644	tet(M)	tet(M)	tetracycline	84	84	84	12	34	4	61	0.7261904761904762	Tn916-like	3486	2553	0.732358	3070	0.88066552	2421	0.69449225	2041	0.5854848	380	512	3233	0.92742398	1830	0.52495697	yes	yes	yes	yes	yes	yes	yes	True	True	True	True
+repARGgff0000834	APH(3')-IIIa	APH(3')-IIIa	aminoglycoside	15	15	15	5	12	2	2	0.1333333333333333	IS/transposase	105	74	0.7047619	101	0.96190476	26	0.24761905	14	0.13333333	12	60	27	0.25714286	1	0.00952381	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0001087	tet(40)	tet(40)	tetracycline	3	3	3	1	2	1	0	0.0	No detected MGE evidence	3	0	0.0	2	0.66666667	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0000063	ErmF	ErmF	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001154	Streptococcus suis chloramphenicol acetyltransferase	Limosilactobacillus reuteri cat-TC;Streptococcus suis chloramphenicol acetyltransferase	phenicol	24	24	24	5	11	1	0	0.0	No detected MGE evidence	276	184	0.66666667	236	0.85507246	0	0.0	0	0.0	0	184	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0001122	lsaE	lsaE	multidrug	13	13	13	2	7	3	0	0.0	No detected MGE evidence	78	40	0.51282051	65	0.83333333	23	0.29487179	10	0.12820513	13	30	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000066	lnuA	lnuA	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000721	Enterococcus faecalis chloramphenicol acetyltransferase	Enterococcus faecalis chloramphenicol acetyltransferase	phenicol	2	2	2	1	2	2	2	1.0	Plasmid-related marker	1	0	0.0	1	1.0	1	1.0	0	0.0	1	0	1	1.0	1	1.0	yes	yes	no	yes	no	yes	no	True	True	False	False
+repARGgff0001281	dfrF	dfrF	trimethoprim	4	4	4	2	2	2	0	0.0	No detected MGE evidence	6	4	0.66666667	4	0.66666667	4	0.66666667	4	0.66666667	0	0	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000072	tet(H)	tet(H)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000073	tet(Q)	tet(Q)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000108	tet(X)	tet(X)	tetracycline	2	2	2	1	2	1	0	0.0	No detected MGE evidence	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0000091	Escherichia coli emrE	Escherichia coli emrE	MLS	2	2	2	2	2	1	0	0.0	No detected MGE evidence	1	1	1.0	1	1.0	0	0.0	0	0.0	0	1	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0001155	tet(K)	tet(K)	tetracycline	8	8	8	3	3	1	8	1.0	Plasmid-related marker	28	19	0.67857143	19	0.67857143	0	0.0	0	0.0	0	19	28	1.0	28	1.0	yes	yes	yes	no	no	yes	yes	True	True	False	False
+repARGgff0000421	ANT(6)-Ia	ANT(6)-Ia	aminoglycoside	29	29	29	6	9	3	3	0.1034482758620689	IS/transposase	406	192	0.4729064	232	0.57142857	103	0.25369458	47	0.11576355	56	145	81	0.19950739	3	0.00738916	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0000083	ugd	ugd	peptide	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000578	Streptococcus suis chloramphenicol acetyltransferase	Streptococcus suis chloramphenicol acetyltransferase	phenicol	6	6	6	2	5	2	0	0.0	No detected MGE evidence	15	5	0.33333333	14	0.93333333	9	0.6	3	0.2	6	2	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000677	ANT(6)-Ib	ANT(6)-Ib	aminoglycoside	7	7	7	3	4	2	0	0.0	No detected MGE evidence	21	14	0.66666667	17	0.80952381	12	0.57142857	7	0.33333333	5	7	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001121	lnuB	lnuB	MLS	12	12	12	2	7	3	1	0.0833333333333333	IS/transposase	66	32	0.48484848	55	0.83333333	21	0.31818182	8	0.12121212	13	24	11	0.16666667	0	0.0	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0001328	tet(44)	tet(44)	tetracycline	5	5	5	1	2	2	0	0.0	No detected MGE evidence	10	0	0.0	6	0.6	4	0.4	0	0.0	4	0	0	0.0	0	0.0	yes	yes	no	yes	no	no	no	False	False	False	False
+repARGgff0000483	poxtA	poxtA	multidrug	22	21	21	7	13	4	9	0.4090909090909091	IS/transposase	210	158	0.75238095	181	0.86190476	87	0.41428571	62	0.2952381	25	96	132	0.62857143	28	0.13333333	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0000106	SAT-4	SAT-4	aminoglycoside	4	4	4	2	3	3	0	0.0	No detected MGE evidence	6	3	0.5	5	0.83333333	5	0.83333333	3	0.5	2	0	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001327	CfxA6	CfxA6	beta-lactam	2	2	2	1	2	1	0	0.0	No detected MGE evidence	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0000922	ErmC	ErmC	MLS	18	18	18	3	4	2	4	0.2222222222222222	Plasmid-related marker	153	33	0.21568627	61	0.39869281	17	0.11111111	2	0.0130719	15	31	62	0.40522876	6	0.03921569	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0000118	qacG	qacG	disinfecting agents and antiseptics	1	1	1	1	1	1	1	1.0	Plasmid-related marker	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0000120	ErmX	ErmX	MLS	3	3	3	2	3	1	0	0.0	No detected MGE evidence	3	2	0.66666667	3	1.0	0	0.0	0	0.0	0	2	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0001409	catA8	catA8	phenicol	20	20	20	2	6	4	1	0.05	Plasmid-related marker	190	64	0.33684211	98	0.51578947	69	0.36315789	35	0.18421053	34	29	19	0.1	0	0.0	yes	yes	yes	yes	yes	no	yes	True	False	False	False
+repARGgff0000131	ErmC	ErmC	MLS	1	1	1	1	1	1	1	1.0	Plasmid-related marker	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0000642	ErmA	ErmA	MLS	5	5	5	1	1	1	3	0.6	IS/transposase	10	0	0.0	0	0.0	0	0.0	0	0.0	0	0	9	0.9	3	0.3	yes	no	no	no	no	yes	no	True	True	False	False
+repARGgff0000144	vgaE	vgaE	multidrug	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001369	tet(Q)	tet(Q)	tetracycline	2	2	2	2	2	1	0	0.0	No detected MGE evidence	1	1	1.0	1	1.0	0	0.0	0	0.0	0	1	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0000154	CTX-M-55	CTX-M-55	beta-lactam	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001320	tetB(P)	tetB(P)	tetracycline	3	3	3	1	1	1	0	0.0	No detected MGE evidence	3	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	no	no	no	no	no	no	False	False	False	False
+repARGgff0000158	dfrD	dfrD	trimethoprim	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001127	vatH	vatH	MLS	11	11	11	3	6	3	0	0.0	No detected MGE evidence	55	31	0.56363636	40	0.72727273	19	0.34545455	8	0.14545455	11	23	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001128	vgaD	vgaD	MLS	10	10	10	3	5	3	0	0.0	No detected MGE evidence	45	23	0.51111111	30	0.66666667	17	0.37777778	6	0.13333333	11	17	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001385	lnuA	lnuA	MLS	2	2	2	2	2	2	0	0.0	No detected MGE evidence	1	1	1.0	1	1.0	1	1.0	1	1.0	0	0	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000182	vatE	vatE	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000183	tet(S)	tet(S)	tetracycline	4	4	4	2	2	3	4	1.0	IS/transposase	6	4	0.66666667	4	0.66666667	5	0.83333333	4	0.66666667	1	0	6	1.0	6	1.0	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0000289	TEM-1	TEM-1;TEM-116;TEM-171;TEM-181	beta-lactam	8	8	8	6	8	4	7	0.875	Plasmid-related marker	28	26	0.92857143	28	1.0	21	0.75	19	0.67857143	2	7	28	1.0	21	0.75	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0000185	tet(C)	tet(C)	tetracycline	1	1	1	1	1	1	1	1.0	Plasmid-related marker	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0000230	tet(M)	tet(M)	tetracycline	49	49	49	3	9	4	16	0.3265306122448979	Tn916-like	1176	140	0.11904762	467	0.39710884	522	0.44387755	39	0.03316327	483	101	648	0.55102041	120	0.10204082	yes	yes	yes	yes	yes	yes	yes	True	True	True	True
+repARGgff0000195	tet(M)	tet(M)	tetracycline	8	8	8	6	6	3	3	0.375	Tn916-like	28	25	0.89285714	25	0.89285714	17	0.60714286	17	0.60714286	0	8	18	0.64285714	3	0.10714286	yes	yes	yes	yes	yes	yes	yes	True	True	True	True
+repARGgff0000714	catA8	catA8	phenicol	2	2	2	1	1	2	1	0.5	Tn916-like	1	0	0.0	0	0.0	1	1.0	0	0.0	1	0	1	1.0	0	0.0	yes	no	no	yes	no	yes	no	True	True	False	False
+repARGgff0000220	aad(6)	aad(6)	aminoglycoside	1	1	1	1	1	1	1	1.0	IS/transposase	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0000420	AAC(6')-Ie-APH(2'')-Ia bifunctional protein	AAC(6')-Ie-APH(2'')-Ia bifunctional protein	aminoglycoside	28	28	28	4	10	3	10	0.3571428571428571	IS/transposase	378	209	0.55291005	255	0.67460317	100	0.26455026	61	0.16137566	39	148	225	0.5952381	45	0.11904762	yes	yes	yes	yes	yes	yes	yes	True	True	False	False
+repARGgff0001314	vatE	vatE	MLS	23	23	23	3	9	2	0	0.0	No detected MGE evidence	253	167	0.66007905	223	0.88142292	60	0.23715415	48	0.18972332	12	119	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000385	tet(M)	tet(M)	tetracycline	8	8	8	1	2	3	4	0.5	Tn916-like	28	0	0.0	16	0.57142857	13	0.46428571	0	0.0	13	0	22	0.78571429	6	0.21428571	yes	yes	no	yes	no	yes	no	True	True	True	True
+repARGgff0000257	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	True	False
+repARGgff0000317	tet(M)	tet(M)	tetracycline	2	2	2	1	1	2	2	1.0	Tn916-like	1	0	0.0	0	0.0	1	1.0	0	0.0	1	0	1	1.0	1	1.0	yes	no	no	yes	no	yes	no	True	True	True	True
+repARGgff0000322	tet(W)	tet(W)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000331	tet(M)	tet(M)	tetracycline	2	2	2	2	2	2	2	1.0	Tn916-like	1	1	1.0	1	1.0	1	1.0	1	1.0	0	0	1	1.0	1	1.0	yes	yes	yes	yes	yes	yes	yes	True	True	True	True
+repARGgff0000711	tet(O/W/32/O)	tet(O/W/32/O)	tetracycline	5	5	5	1	1	1	0	0.0	No detected MGE evidence	10	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	no	no	no	no	no	no	False	False	False	False
+repARGgff0000371	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	True	False
+repARGgff0000780	tet(M)	tet(M)	tetracycline	33	33	33	2	2	2	32	0.9696969696969696	Tn916-like	528	260	0.49242424	260	0.49242424	32	0.06060606	13	0.02462121	19	247	528	1.0	496	0.93939394	yes	yes	yes	yes	yes	yes	yes	True	True	True	True
+repARGgff0000395	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	True	False
+repARGgff0000402	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	True	False
+repARGgff0000426	EreD	EreD	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000507	23S rRNA (adenine(2058)-N(6))-methyltransferase Erm(A)	23S rRNA (adenine(2058)-N(6))-methyltransferase Erm(A)	MLS	2	2	2	1	1	1	0	0.0	No detected MGE evidence	1	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	no	no	no	no	no	no	False	False	False	False
+repARGgff0000526	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	1	1.0	Tn916-like	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	True	True
+repARGgff0000529	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	True	False
+repARGgff0000545	tet(O)	tet(O)	tetracycline	4	4	4	1	1	2	0	0.0	No detected MGE evidence	6	0	0.0	0	0.0	3	0.5	0	0.0	3	0	0	0.0	0	0.0	yes	no	no	yes	no	no	no	False	False	False	False
+repARGgff0000551	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	1	1.0	Tn916-like	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	True	True
+repARGgff0000561	tet(M)	tet(M)	tetracycline	2	2	2	1	1	1	1	0.5	Tn916-like	1	0	0.0	0	0.0	0	0.0	0	0.0	0	0	1	1.0	0	0.0	yes	no	no	no	no	yes	no	True	True	True	True
+repARGgff0000969	lnuC	lnuC	MLS	4	4	4	2	2	3	0	0.0	No detected MGE evidence	6	3	0.5	3	0.5	5	0.83333333	3	0.5	2	0	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001282	tet(M)	tet(M)	tetracycline	6	6	6	1	1	2	6	1.0	Tn916-like	15	0	0.0	0	0.0	5	0.33333333	0	0.0	5	0	15	1.0	15	1.0	yes	no	no	yes	no	yes	no	True	True	True	True
+repARGgff0000607	tet(M)	tet(M)	tetracycline	2	2	2	1	2	1	2	1.0	Tn916-like	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	1	1.0	1	1.0	yes	yes	no	no	no	yes	no	True	True	True	True
+repARGgff0001210	ErmT	ErmT	MLS	2	2	2	1	1	1	0	0.0	No detected MGE evidence	1	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	no	no	no	no	no	no	False	False	False	False
+repARGgff0000655	aad(6)	aad(6)	aminoglycoside	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000678	tet(44)	tet(44)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000687	vatE	vatE	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000690	ErmB	ErmB	MLS	2	2	2	2	2	2	0	0.0	No detected MGE evidence	1	1	1.0	1	1.0	1	1.0	1	1.0	0	0	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0000691	tet(O/W/32/O)	tet(O/W/32/O)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000723	lnuC	lnuC	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000755	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	1	1.0	Tn916-like	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	True	True
+repARGgff0000761	tet(L)	tet(L)	tetracycline	2	2	2	1	2	1	1	0.5	Plasmid-related marker	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	1	1.0	0	0.0	yes	yes	no	no	no	yes	no	True	True	False	False
+repARGgff0000763	tet(O/W/32/O)	tet(O/W/32/O)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000889	tet(O/W)	tet(O/W)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000921	lnuA	lnuA	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000944	aadA	aadA	aminoglycoside	1	1	1	1	1	1	1	1.0	Plasmid-related marker	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0000956	mphE	mphE	MLS	2	2	2	1	2	1	0	0.0	No detected MGE evidence	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0000957	msrE	msrE	MLS	2	2	2	1	2	1	0	0.0	No detected MGE evidence	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0000971	sul2	sul2	sulfonamide	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000984	lnuC	lnuC	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000992	catA1	catA1	phenicol	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0000996	Escherichia coli EF-Tu mutants conferring resistance to Pulvomycin	Escherichia coli EF-Tu mutants conferring resistance to Pulvomycin	pulvomycin	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001021	aadS	aadS	aminoglycoside	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001039	vanA	vanA	glycopeptide	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001040	vanH gene in vanA cluster	vanH gene in vanA cluster	glycopeptide	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001041	vanX gene in vanA cluster	vanX gene in vanA cluster	glycopeptide	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001042	vanY gene in vanA cluster	vanY gene in vanA cluster	glycopeptide	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001052	tet(Q)	tet(Q)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001421	emrK	emrK	tetracycline	2	2	2	2	2	2	0	0.0	No detected MGE evidence	1	1	1.0	1	1.0	1	1.0	1	1.0	0	0	0	0.0	0	0.0	yes	yes	yes	yes	yes	no	yes	False	False	False	False
+repARGgff0001334	Enterococcus faecium chloramphenicol acetyltransferase	Enterococcus faecium chloramphenicol acetyltransferase	phenicol	2	2	2	2	2	1	2	1.0	Plasmid-related marker	1	1	1.0	1	1.0	0	0.0	0	0.0	0	1	1	1.0	1	1.0	yes	yes	yes	no	no	yes	yes	True	True	False	False
+repARGgff0001091	mphC	mphC	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001092	msrA	msrA	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001135	dfrK	dfrK	trimethoprim	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001139	emrK	emrK	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001140	emrY	emrY	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001141	evgA	evgA	multidrug	2	2	2	1	2	1	0	0.0	No detected MGE evidence	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0001142	apmA	apmA	aminoglycoside	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001176	aad(6)	aad(6)	aminoglycoside	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001177	sul3	sul3	sulfonamide	2	2	2	2	2	1	2	1.0	IS/transposase	1	1	1.0	1	1.0	0	0.0	0	0.0	0	1	1	1.0	1	1.0	yes	yes	yes	no	no	yes	yes	True	True	False	False
+repARGgff0001197	aadA2	aadA2	aminoglycoside	1	1	1	1	1	1	1	1.0	Other MGE	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001198	dfrA15	dfrA15	trimethoprim	1	1	1	1	1	1	1	1.0	Other MGE	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001200	OXA-347	OXA-347	beta-lactam	3	3	3	2	3	1	0	0.0	No detected MGE evidence	3	2	0.66666667	3	1.0	0	0.0	0	0.0	0	2	0	0.0	0	0.0	yes	yes	yes	no	no	no	yes	False	False	False	False
+repARGgff0001204	APH(3')-Ia	APH(3')-Ia	aminoglycoside	1	1	1	1	1	1	1	1.0	IS/transposase	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001226	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	True	False
+repARGgff0001230	Streptococcus suis chloramphenicol acetyltransferase	Streptococcus suis chloramphenicol acetyltransferase	phenicol	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001242	tet(M)	tet(M)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	True	False
+repARGgff0001254	Campylobacter coli chloramphenicol acetyltransferase	Campylobacter coli chloramphenicol acetyltransferase	phenicol	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001255	FosXCC	FosXCC	fosfomycin	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001257	cfrA	cfrA	multidrug	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001266	qacG	qacG	disinfecting agents and antiseptics	1	1	1	1	1	1	1	1.0	Plasmid-related marker	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001278	cfr(B)	cfr(B)	multidrug	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001291	catP	catP	phenicol	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001294	mef(B)	mef(B)	MLS	1	1	1	1	1	1	1	1.0	IS/transposase	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001296	qacL	qacL	disinfecting agents and antiseptics	1	1	1	1	1	1	1	1.0	IS/transposase	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001304	APH(2'')-If	APH(2'')-If	aminoglycoside	2	2	2	1	2	1	0	0.0	No detected MGE evidence	1	0	0.0	1	1.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	yes	yes	no	no	no	no	no	False	False	False	False
+repARGgff0001317	tet(32)	tet(32)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001337	tet(W/N/W)	tet(W/N/W)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001338	lnuC	lnuC	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001339	Mef(En2)	Mef(En2)	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001344	tet(Q)	tet(Q)	tetracycline	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001348	mdtM	mdtM	multidrug	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001349	msbA	msbA	multidrug	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001350	QnrS1	QnrS1	fluoroquinolone	1	1	1	1	1	1	1	1.0	IS/transposase	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001352	ugd	ugd	peptide	1	1	1	1	1	1	1	1.0	IS/transposase	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	yes	no	True	True	False	False
+repARGgff0001353	ugd	ugd	peptide	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001360	ErmF	ErmF	MLS	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001362	catB3	catB3	phenicol	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001382	cfrE	cfrE	multidrug	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001404	aadA	aadA	aminoglycoside	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False
+repARGgff0001423	gadX	gadX	multidrug	1	1	1	1	1	1	0	0.0	No detected MGE evidence	0	0	0.0	0	0.0	0	0.0	0	0.0	0	0	0	0.0	0	0.0	no	no	no	no	no	no	no	False	False	False	False

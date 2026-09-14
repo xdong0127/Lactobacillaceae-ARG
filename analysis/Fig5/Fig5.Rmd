@@ -1,0 +1,710 @@
+---
+title: "Fig5: selected analyses and plots"
+output: html_document
+---
+
+Selected code is included directly below. This notebook covers only the analyses listed in its sections. See the repository README for omitted material.
+
+```{r setup, include=FALSE}
+REPO <- normalizePath(file.path(dirname(knitr::current_input(dir = TRUE)), ".."), winslash = "/", mustWork = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = TRUE, error = FALSE)
+knitr::opts_knit$set(root.dir = REPO)
+dir.create(file.path(REPO, "Fig5/output"), recursive = TRUE, showWarnings = FALSE)
+Sys.setenv(FIGURE_REPO_ROOT = REPO, PYTHONUTF8 = "1", MPLBACKEND = "Agg")
+knitr::opts_chunk$set(python.reticulate = FALSE, engine.path = list(python = Sys.getenv("PYTHON", unset = Sys.which("python"))))
+```
+
+## Fig5B — source enrichment and decomposition
+
+```{r analyze-Fig5B-source-enrichment}
+dir.create(file.path(REPO, "Fig5/output"), recursive = TRUE, showWarnings = FALSE)
+
+# Fig. 3B MQ analysis: ARG gene-source enrichment and species decomposition
+
+required_packages <- c("readr", "dplyr", "tidyr", "tibble", "openxlsx")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages) > 0) {
+  stop("Missing R packages: ", paste(missing_packages, collapse = ", "), call. = FALSE)
+}
+
+suppressPackageStartupMessages({
+  library(readr)
+  library(dplyr)
+  library(tidyr)
+  library(tibble)
+})
+
+project_dir <- REPO
+s1_path <- file.path(REPO, "shared/data/MQ_genomes.tsv")
+s3_path <- file.path(REPO, "shared/data/ARG_annotations.tsv")
+
+out_root <- file.path(REPO, "Fig5/output")
+source_dir <- file.path(REPO, "Fig5/output")
+stats_dir <- file.path(REPO, "Fig5/output")
+dir.create(source_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
+
+source_levels <- c("animal", "human", "food", "other")
+minimum_total_carriers <- 5L
+minimum_focal_source_carriers <- 3L
+
+clean_category <- function(x, fallback) {
+  x <- as.character(x)
+  x[is.na(x) | trimws(x) == ""] <- fallback
+  x
+}
+
+s1 <- readr::read_tsv(s1_path, show_col_types = FALSE)
+s3 <- readr::read_tsv(s3_path, show_col_types = FALSE)
+stopifnot(nrow(s1) == 25596L, nrow(s3) == 3920L)
+
+mq <- s1 %>%
+  transmute(
+    genome_id,
+    source_type = factor(clean_category(source_type, "other"), levels = source_levels),
+    genus = clean_category(genus, "Unclassified genus"),
+    species = clean_category(species, "Unclassified at species level"),
+    species_annotated = species != "Unclassified at species level"
+  )
+
+gene_carriers <- s3 %>%
+  distinct(genome_id, ARG_gene, ARG_class) %>%
+  left_join(
+    mq %>% select(genome_id, source_type, genus, species, species_annotated),
+    by = "genome_id"
+  )
+
+stopifnot(!anyNA(gene_carriers$source_type), !anyNA(gene_carriers$species))
+
+arg_gene_classes <- gene_carriers %>%
+  count(ARG_gene, ARG_class, sort = TRUE) %>%
+  group_by(ARG_gene) %>%
+  slice_head(n = 1) %>%
+  ungroup() %>%
+  select(ARG_gene, ARG_class)
+
+all_arg_genes <- sort(unique(gene_carriers$ARG_gene))
+
+enrichment_tests <- lapply(all_arg_genes, function(gene) {
+  carrier_ids <- unique(gene_carriers$genome_id[gene_carriers$ARG_gene == gene])
+  lapply(source_levels, function(src) {
+    in_source <- as.character(mq$source_type) == src
+    is_carrier <- mq$genome_id %in% carrier_ids
+    contingency <- matrix(
+      c(
+        sum(is_carrier & in_source),
+        sum(!is_carrier & in_source),
+        sum(is_carrier & !in_source),
+        sum(!is_carrier & !in_source)
+      ),
+      nrow = 2, byrow = TRUE
+    )
+    test <- stats::fisher.test(contingency)
+    tibble(
+      ARG_gene = gene,
+      source_type = src,
+      carrier_genomes_in_source = contingency[1, 1],
+      noncarrier_genomes_in_source = contingency[1, 2],
+      carrier_genomes_outside_source = contingency[2, 1],
+      noncarrier_genomes_outside_source = contingency[2, 2],
+      total_carrier_genomes_MQ = length(carrier_ids),
+      odds_ratio = unname(test$estimate),
+      p_value = test$p.value
+    )
+  }) %>% bind_rows()
+}) %>%
+  bind_rows() %>%
+  left_join(arg_gene_classes, by = "ARG_gene") %>%
+  mutate(
+    fdr = p.adjust(p_value, method = "BH"),
+    enriched = fdr < 0.05 & odds_ratio > 1 &
+      total_carrier_genomes_MQ >= minimum_total_carriers &
+      carrier_genomes_in_source >= minimum_focal_source_carriers
+  ) %>%
+  select(
+    ARG_gene, ARG_class, source_type,
+    carrier_genomes_in_source, noncarrier_genomes_in_source,
+    carrier_genomes_outside_source, noncarrier_genomes_outside_source,
+    total_carrier_genomes_MQ, odds_ratio, p_value, fdr, enriched
+  )
+
+# Species breadth is defined from all MQ genomes with a species-level assignment.
+species_breadth <- mq %>%
+  filter(species_annotated) %>%
+  distinct(species, source_type) %>%
+  count(species, name = "source_count_for_species")
+
+decompose_gene_source <- function(gene, src) {
+  carriers <- gene_carriers %>%
+    filter(ARG_gene == gene, as.character(source_type) == src) %>%
+    distinct(genome_id, species, species_annotated) %>%
+    left_join(species_breadth, by = "species")
+
+  source_restricted_n <- sum(
+    carriers$species_annotated & carriers$source_count_for_species == 1,
+    na.rm = TRUE
+  )
+  multi_source_n <- sum(
+    carriers$species_annotated & carriers$source_count_for_species >= 2,
+    na.rm = TRUE
+  )
+  species_unclassified_n <- sum(!carriers$species_annotated)
+
+  category <- case_when(
+    source_restricted_n == 0 & multi_source_n == 0 ~ "Species unclassified",
+    source_restricted_n > 0 & multi_source_n > 0 ~ "Mixed species contribution",
+    source_restricted_n > 0 ~ "Source-restricted species only",
+    multi_source_n > 0 ~ "Multi-source species only",
+    TRUE ~ "Species unclassified"
+  )
+
+  tibble(
+    source_restricted_carriers = source_restricted_n,
+    multi_source_carriers = multi_source_n,
+    species_unclassified_carriers = species_unclassified_n,
+    decomposition_category = category
+  )
+}
+
+enriched_decomposition <- enrichment_tests %>%
+  filter(enriched) %>%
+  rowwise() %>%
+  mutate(
+    decomposition = list(
+      decompose_gene_source(ARG_gene, as.character(source_type))
+    )
+  ) %>%
+  ungroup() %>%
+  unnest(decomposition)
+
+category_levels <- c(
+  "Multi-source species only",
+  "Mixed species contribution",
+  "Source-restricted species only",
+  "Species unclassified"
+)
+
+panel_b_summary <- enriched_decomposition %>%
+  count(source_type, decomposition_category, name = "gene_source_associations") %>%
+  complete(
+    source_type = source_levels,
+    decomposition_category = category_levels,
+    fill = list(gene_source_associations = 0L)
+  ) %>%
+  group_by(source_type) %>%
+  mutate(
+    total_enriched_associations = sum(gene_source_associations),
+    proportion = if_else(
+      total_enriched_associations > 0,
+      gene_source_associations / total_enriched_associations,
+      0
+    )
+  ) %>%
+  ungroup() %>%
+  mutate(
+    source_type = factor(source_type, levels = source_levels),
+    decomposition_category = factor(
+      decomposition_category, levels = category_levels
+    )
+  )
+
+analysis_manifest <- tibble(
+  item = c(
+    "MQ genomes", "ARG genes tested", "Gene-source tests",
+    "BH-significant enriched associations", "Animal enriched associations",
+    "Human enriched associations", "Food enriched associations",
+    "Other enriched associations", "Minimum total carriers",
+    "Minimum focal-source carriers"
+  ),
+  value = as.character(c(
+    nrow(mq), length(all_arg_genes), nrow(enrichment_tests),
+    nrow(enriched_decomposition),
+    sum(enriched_decomposition$source_type == "animal"),
+    sum(enriched_decomposition$source_type == "human"),
+    sum(enriched_decomposition$source_type == "food"),
+    sum(enriched_decomposition$source_type == "other"),
+    minimum_total_carriers, minimum_focal_source_carriers
+  ))
+)
+
+readr::write_tsv(
+  panel_b_summary,
+  file.path(source_dir, "Fig3B_MQ_source_decomposition_summary.tsv")
+)
+openxlsx::write.xlsx(
+  panel_b_summary,
+  file.path(source_dir, "Fig3B_MQ_source_decomposition_summary.xlsx"),
+  overwrite = TRUE
+)
+readr::write_tsv(
+  enrichment_tests,
+  file.path(stats_dir, "Fig3B_MQ_ARG_source_enrichment_all_tests.tsv")
+)
+readr::write_tsv(
+  enriched_decomposition,
+  file.path(stats_dir, "Fig3B_MQ_enriched_association_decomposition.tsv")
+)
+openxlsx::write.xlsx(
+  enriched_decomposition,
+  file.path(stats_dir, "Fig3B_MQ_enriched_association_decomposition.xlsx"),
+  overwrite = TRUE
+)
+readr::write_tsv(
+  analysis_manifest,
+  file.path(stats_dir, "Fig3B_MQ_analysis_manifest.tsv")
+)
+
+message("Fig. 3B MQ analysis completed.")
+message("Enriched gene-source associations: ", nrow(enriched_decomposition))
+message(
+  "By source: ",
+  paste(
+    enriched_decomposition %>% count(source_type) %>%
+      transmute(label = paste0(source_type, "=", n)) %>% pull(label),
+    collapse = "; "
+  )
+)
+```
+
+## Fig5C/D — within-species source comparisons
+
+```{r analyze-Fig5CD-within-species}
+dir.create(file.path(REPO, "Fig5/output"), recursive = TRUE, showWarnings = FALSE)
+
+# Fig. 3C MQ analysis: within-species source effect across all eligible species
+
+required_packages <- c("readr", "dplyr", "tidyr", "tibble", "openxlsx")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages) > 0) {
+  stop("Missing R packages: ", paste(missing_packages, collapse = ", "), call. = FALSE)
+}
+
+suppressPackageStartupMessages({
+  library(readr)
+  library(dplyr)
+  library(tidyr)
+  library(tibble)
+})
+
+project_dir <- REPO
+s1_path <- file.path(REPO, "shared/data/MQ_genomes.tsv")
+s3_path <- file.path(REPO, "shared/data/ARG_annotations.tsv")
+
+out_root <- file.path(REPO, "Fig5/output")
+source_dir <- file.path(REPO, "Fig5/output")
+stats_dir <- file.path(REPO, "Fig5/output")
+dir.create(source_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
+
+source_levels <- c("animal", "human", "food", "other")
+minimum_per_source <- 5L
+
+clean_category <- function(x, fallback) {
+  x <- as.character(x)
+  x[is.na(x) | trimws(x) == ""] <- fallback
+  x
+}
+
+s1 <- readr::read_tsv(s1_path, show_col_types = FALSE)
+s3 <- readr::read_tsv(s3_path, show_col_types = FALSE)
+stopifnot(nrow(s1) == 25596L, nrow(s3) == 3920L)
+
+arg_positive_ids <- unique(s3$genome_id)
+mq <- s1 %>%
+  transmute(
+    genome_id,
+    genus = clean_category(genus, "Unclassified genus"),
+    species = clean_category(species, "Unclassified at species level"),
+    source_type = factor(clean_category(source_type, "other"), levels = source_levels),
+    ARG_positive = genome_id %in% arg_positive_ids
+  )
+
+# Species without a species-level assignment remain in global analyses but are
+# deliberately excluded here because this panel is explicitly species-stratified.
+species_source_counts <- mq %>%
+  filter(species != "Unclassified at species level") %>%
+  count(genus, species, source_type, ARG_positive, name = "n") %>%
+  complete(
+    nesting(genus, species, source_type),
+    ARG_positive = c(FALSE, TRUE),
+    fill = list(n = 0L)
+  ) %>%
+  pivot_wider(
+    names_from = ARG_positive, values_from = n,
+    names_prefix = "ARG_positive_"
+  ) %>%
+  rename(
+    ARG_negative_n = ARG_positive_FALSE,
+    ARG_positive_n = ARG_positive_TRUE
+  ) %>%
+  mutate(
+    source_n = ARG_negative_n + ARG_positive_n,
+    ARG_positive_rate = ARG_positive_n / source_n
+  ) %>%
+  filter(source_n >= minimum_per_source)
+
+eligible_species <- species_source_counts %>%
+  distinct(species, source_type) %>%
+  count(species, name = "eligible_source_count") %>%
+  filter(eligible_source_count >= 2)
+
+eligible_profiles <- species_source_counts %>%
+  semi_join(eligible_species, by = "species") %>%
+  arrange(species, source_type)
+
+test_one_species <- function(df) {
+  contingency <- as.matrix(df[, c("ARG_positive_n", "ARG_negative_n")])
+  test <- stats::fisher.test(contingency, simulate.p.value = FALSE)
+  max_rate <- max(df$ARG_positive_rate)
+  min_rate <- min(df$ARG_positive_rate)
+  highest_sources <- as.character(df$source_type[df$ARG_positive_rate == max_rate])
+  lowest_sources <- as.character(df$source_type[df$ARG_positive_rate == min_rate])
+  tibble(
+    genus = first(df$genus),
+    species = first(df$species),
+    eligible_source_count = nrow(df),
+    total_MQ_genomes = sum(df$source_n),
+    total_ARG_positive = sum(df$ARG_positive_n),
+    minimum_source_n = min(df$source_n),
+    maximum_source_n = max(df$source_n),
+    minimum_ARG_positive_rate = min_rate,
+    maximum_ARG_positive_rate = max_rate,
+    max_rate_difference = max_rate - min_rate,
+    highest_rate_source = paste(highest_sources, collapse = "/"),
+    lowest_rate_source = paste(lowest_sources, collapse = "/"),
+    p_value = test$p.value
+  )
+}
+
+species_tests <- eligible_profiles %>%
+  group_split(species) %>%
+  lapply(test_one_species) %>%
+  bind_rows() %>%
+  mutate(
+    fdr = p.adjust(p_value, method = "BH"),
+    minus_log10_fdr = -log10(pmax(fdr, .Machine$double.xmin)),
+    significant = fdr < 0.05
+  ) %>%
+  arrange(fdr, desc(max_rate_difference))
+
+profile_export <- eligible_profiles %>%
+  left_join(
+    species_tests %>% select(species, fdr, significant, max_rate_difference),
+    by = "species"
+  ) %>%
+  mutate(source_type = as.character(source_type))
+
+manifest <- tibble(
+  item = c(
+    "MQ genomes", "Unclassified-at-species MQ genomes",
+    "Minimum genomes per retained species-source stratum",
+    "Eligible multi-source species", "BH-significant species",
+    "Species with highest rate in animal", "Species with highest rate in human",
+    "Species with highest rate in food", "Species with highest rate in other"
+  ),
+  value = as.character(c(
+    nrow(mq), sum(mq$species == "Unclassified at species level"),
+    minimum_per_source, nrow(species_tests), sum(species_tests$significant),
+    sum(species_tests$highest_rate_source == "animal"),
+    sum(species_tests$highest_rate_source == "human"),
+    sum(species_tests$highest_rate_source == "food"),
+    sum(species_tests$highest_rate_source == "other")
+  ))
+)
+
+readr::write_tsv(
+  species_tests,
+  file.path(source_dir, "Fig3C_MQ_within_species_source_effect.tsv")
+)
+openxlsx::write.xlsx(
+  species_tests,
+  file.path(source_dir, "Fig3C_MQ_within_species_source_effect.xlsx"),
+  overwrite = TRUE
+)
+readr::write_tsv(
+  profile_export,
+  file.path(stats_dir, "Fig3C_MQ_species_source_ARG_positive_profiles.tsv")
+)
+openxlsx::write.xlsx(
+  profile_export,
+  file.path(stats_dir, "Fig3C_MQ_species_source_ARG_positive_profiles.xlsx"),
+  overwrite = TRUE
+)
+readr::write_tsv(
+  manifest,
+  file.path(stats_dir, "Fig3C_MQ_analysis_manifest.tsv")
+)
+
+message("Fig. 3C MQ analysis completed.")
+message("Eligible multi-source species: ", nrow(species_tests))
+message("BH-significant species: ", sum(species_tests$significant))
+```
+
+## Fig5D — significant-species heatmap
+
+```{python plot-Fig5D-species-heatmap}
+"""Fig. 3D alternative: conventional species-by-source heatmap."""
+
+from __future__ import annotations
+
+from pathlib import Path
+import os
+REPO = Path(os.environ["FIGURE_REPO_ROOT"])
+(REPO / "Fig5/output").mkdir(parents=True, exist_ok=True)
+
+
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import Normalize
+from matplotlib.patches import Rectangle
+
+
+SCRIPT_PATH = (REPO / 'Fig5/Fig5.Rmd')
+ROOT = (REPO / 'Fig5/output')
+PANEL_C_ROOT = (REPO / 'Fig5/output')
+SUMMARY_PATH = (REPO / 'Fig5/data/Fig3C_MQ_within_species_source_effect.tsv')
+PROFILE_PATH = (REPO / 'Fig5/data/Fig3C_MQ_species_source_ARG_positive_profiles.tsv')
+EXPORT_DIR = (REPO / 'Fig5/output/exports')
+SOURCE_DATA_DIR = (REPO / 'Fig5/output')
+EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+SOURCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+SOURCE_LEVELS = ["animal", "human", "food", "other"]
+SOURCE_LABELS = ["Animal", "Human", "Food", "Other"]
+SOURCE_COLORS = {
+    "animal": "#B48770",
+    "human": "#6F879F",
+    "food": "#7BAA8E",
+    "other": "#A9AFB6",
+}
+
+TEXT_COLOR = "#26323A"
+MUTED_TEXT = "#66717B"
+AXIS_COLOR = "#59636C"
+
+
+def pretty_species(name: str) -> str:
+    replacements = {
+        "Lactobacillus sp910589675": "Lactobacillus sp. 910589675",
+        "Lactobacillus sp945980025": "Lactobacillus sp. 945980025",
+        "Limosilactobacillus reuteri_I": "Limosilactobacillus reuteri I",
+        "Limosilactobacillus reuteri_J": "Limosilactobacillus reuteri J",
+    }
+    return replacements.get(name, name)
+
+
+def main() -> None:
+    mpl.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"],
+            "svg.fonttype": "none",
+            "pdf.fonttype": 42,
+            "axes.linewidth": 0.55,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "font.size": 7,
+        }
+    )
+
+    summary = pd.read_csv(SUMMARY_PATH, sep="\t")
+    profiles = pd.read_csv(PROFILE_PATH, sep="\t")
+    sig = summary.loc[summary["significant"].astype(str).str.upper() == "TRUE"].copy()
+    sig["highest_source_group"] = pd.Categorical(
+        sig["highest_rate_source"],
+        categories=["animal", "human", "other", "food"],
+        ordered=True,
+    )
+    sig = sig.sort_values(
+        ["highest_source_group", "max_rate_difference", "minus_log10_fdr"],
+        ascending=[True, False, False],
+    ).reset_index(drop=True)
+    species_order = sig["species"].tolist()
+
+    plot_data = profiles.merge(
+        sig[["species", "highest_rate_source", "max_rate_difference", "fdr"]],
+        on="species",
+        how="inner",
+    )
+    plot_data["ARG_positive_pct"] = 100 * plot_data["ARG_positive_rate"]
+    plot_data["species_pretty"] = plot_data["species"].map(pretty_species)
+    plot_data.to_csv(
+        (REPO / 'Fig5/output/Fig3D_MQ_within_species_heatmap_source_data.tsv'),
+        sep="\t",
+        index=False,
+    )
+
+    matrix = (
+        plot_data.pivot_table(
+            index="species",
+            columns="source_type",
+            values="ARG_positive_pct",
+            aggfunc="first",
+            observed=False,
+        )
+        .reindex(index=species_order, columns=SOURCE_LEVELS)
+    )
+    values = matrix.to_numpy(dtype=float)
+    masked = np.ma.masked_invalid(values)
+
+    cmap = LinearSegmentedColormap.from_list(
+        "arg_rate",
+        ["#F4F6F4", "#D9E5DE", "#AFCBBC", "#6E9E86", "#2E6657"],
+    )
+    cmap.set_bad("#ECEFF1")
+
+    highest_counts = sig["highest_rate_source"].value_counts().reindex(
+        SOURCE_LEVELS, fill_value=0
+    )
+    animal_high = int(highest_counts["animal"])
+    total_sig = int(len(sig))
+
+    fig = plt.figure(figsize=(112 / 25.4, 112 / 25.4))
+    ax = fig.add_axes([0.42, 0.17, 0.31, 0.68])
+    cax = fig.add_axes([0.82, 0.25, 0.020, 0.48])
+    side_ax = fig.add_axes([0.745, 0.17, 0.025, 0.68], sharey=ax)
+
+    norm = Normalize(vmin=0, vmax=80)
+    n_rows, n_cols = values.shape
+    for i in range(n_rows):
+        for j in range(n_cols):
+            value = values[i, j]
+            facecolor = "#ECEFF1" if np.isnan(value) else cmap(norm(value))
+            ax.add_patch(
+                Rectangle(
+                    (j - 0.5, i - 0.5),
+                    1,
+                    1,
+                    facecolor=facecolor,
+                    edgecolor="white",
+                    linewidth=0.35,
+                )
+            )
+    ax.set_xlim(-0.5, len(SOURCE_LEVELS) - 0.5)
+    ax.set_ylim(len(species_order) - 0.5, -0.5)
+
+    ax.set_xticks(np.arange(len(SOURCE_LEVELS)))
+    ax.set_xticklabels(SOURCE_LABELS, rotation=0, color=TEXT_COLOR)
+    ax.set_yticks(np.arange(len(species_order)))
+    ax.set_yticklabels([pretty_species(s) for s in species_order], fontstyle="italic", color=TEXT_COLOR)
+    ax.tick_params(axis="both", length=0, labelsize=5.8)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+    side_ax.set_xlim(0, 1)
+    side_ax.set_xticks([])
+    side_ax.set_yticks(np.arange(len(species_order)))
+    side_ax.tick_params(left=False, labelleft=False)
+    for i, species in enumerate(species_order):
+        source = str(sig.loc[sig["species"] == species, "highest_rate_source"].iloc[0])
+        side_ax.scatter(
+            0.5,
+            i,
+            s=24,
+            facecolor=SOURCE_COLORS.get(source, "#D2D7DC"),
+            edgecolor="white",
+            linewidth=0.5,
+        )
+    for spine in side_ax.spines.values():
+        spine.set_visible(False)
+    side_ax.set_ylim(ax.get_ylim())
+    side_ax.set_title("Highest", fontsize=5.6, color=MUTED_TEXT, pad=5)
+
+    for y0 in np.linspace(0, 80, 80, endpoint=False):
+        cax.add_patch(
+            Rectangle(
+                (0, y0),
+                1,
+                1.02,
+                facecolor=cmap(norm(y0 + 0.5)),
+                edgecolor="none",
+                linewidth=0,
+            )
+        )
+    cax.set_xlim(0, 1)
+    cax.set_ylim(0, 80)
+    cax.set_xticks([])
+    cax.set_yticks([0, 20, 40, 60, 80])
+    cax.yaxis.tick_right()
+    cax.yaxis.set_label_position("right")
+    cax.set_ylabel("ARG-positive genomes (%)", fontsize=5.8, color=TEXT_COLOR)
+    cax.tick_params(axis="y", labelsize=5.3, colors=TEXT_COLOR, length=2)
+    for spine in cax.spines.values():
+        spine.set_linewidth(0.4)
+        spine.set_edgecolor(AXIS_COLOR)
+
+    handles = [
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=SOURCE_COLORS[source],
+            markeredgecolor="white",
+            markersize=5.0,
+            label=label,
+        )
+        for source, label in zip(SOURCE_LEVELS, SOURCE_LABELS)
+    ]
+    fig.legend(
+        handles=handles,
+        loc="lower left",
+        bbox_to_anchor=(0.40, 0.06),
+        frameon=False,
+        ncol=4,
+        handletextpad=0.25,
+        columnspacing=0.7,
+        fontsize=5.5,
+    )
+
+    fig.text(0.035, 0.955, "d", fontsize=9.5, fontweight="bold", ha="left", va="top", color=TEXT_COLOR)
+    fig.text(
+        0.42,
+        0.94,
+        "Within-species ARG carriage by source",
+        fontsize=7.8,
+        fontweight="bold",
+        ha="left",
+        va="top",
+        color=TEXT_COLOR,
+    )
+    fig.text(
+        0.42,
+        0.895,
+        f"{animal_high}/{total_sig} significant species were animal-high",
+        fontsize=6.0,
+        ha="left",
+        va="top",
+        color=MUTED_TEXT,
+    )
+
+    stem = (REPO / 'Fig5/output/Fig3D_MQ_within_species_source_heatmap')
+    fig.savefig(stem.with_suffix(".svg"), transparent=False)
+    try:
+        fig.savefig(stem.with_suffix(".pdf"), transparent=False)
+    except PermissionError as exc:
+        print(f"Skipped PDF export because the file is locked: {exc}")
+    fig.savefig(stem.with_suffix(".png"), dpi=450, transparent=False)
+    fig.savefig(
+        stem.with_suffix(".tiff"),
+        dpi=600,
+        transparent=False,
+        pil_kwargs={"compression": "tiff_lzw"},
+    )
+    plt.close(fig)
+
+    print(f"Exported Fig. 3D heatmap to: {EXPORT_DIR}")
+
+
+main()
+```
+
